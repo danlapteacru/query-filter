@@ -16,7 +16,8 @@ A WordPress plugin for advanced, index-powered filtering of Query Loop blocks. C
 | Concern | Decision |
 |---|---|
 | Integration | Block-only (no shortcodes) |
-| Min WP version | 6.7+ |
+| Min WP version | 6.7+ (max compatibility) |
+| Min PHP version | 8.1+ |
 | Filter types (MVP) | Checkboxes, Search, Sort, Pager, Reset |
 | Data sources | Taxonomy, Post Meta, ACF, WooCommerce |
 | Indexing | Always-on DB index |
@@ -61,7 +62,25 @@ query-filter/
 │   └── filter-reset/
 └── src/
     ├── store.js                   # Single Interactivity API store for all filter state
-    └── api.js                     # REST fetch wrapper (debounced, cancellable)
+    └── api.js                     # Uses @wordpress/api-fetch (no custom HTTP lib)
+
+### JS Dependencies (WordPress packages only)
+
+- `@wordpress/scripts` — build toolchain
+- `@wordpress/interactivity` — frontend store + reactive DOM
+- `@wordpress/interactivity-router` — client-side navigation
+- `@wordpress/api-fetch` — REST requests (handles nonces automatically)
+- `@wordpress/i18n` — internationalization
+- `@wordpress/blocks` — block registration
+- `@wordpress/block-editor` — InspectorControls, block sidebar
+- `@wordpress/components` — SelectControl, ToggleControl, TextControl, etc.
+- `@wordpress/data` — editor-side state (if needed)
+- No custom/third-party JS packages unless no WP package covers the need
+
+### PHP Requirements
+
+- PHP 8.1+ minimum (enums, readonly properties, intersection types allowed)
+- Development: TDD — tests written before implementation
 ```
 
 ### Key Design Principles
@@ -260,12 +279,15 @@ Plain PHP, WP admin styles. No Vue.js or React.
 
 ---
 
-## Testing
+## Testing (TDD)
+
+All code is developed test-first: write failing test → implement → pass → refactor.
 
 - **PHPUnit unit tests**: `Indexer::index_post()`, `QueryEngine::get_post_ids()`, each `FilterType::load_values()`, each `Source::get_values()`
 - **PHPUnit integration tests**: Seed posts + index → POST to REST endpoint → assert correct post IDs and filter counts
-- **Vitest JS tests**: Store actions, URL state serialization/deserialization
+- **Vitest JS tests** (via `@wordpress/scripts`): Store actions, URL state serialization/deserialization
 - **No E2E tests in MVP**
+- Uses `@wordpress/env` for local WordPress test environment
 
 ---
 
