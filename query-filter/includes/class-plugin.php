@@ -40,6 +40,8 @@ final class Query_Filter_Plugin {
 		add_action('edited_term', [$this, 'on_edited_term'], 10, 3);
 		add_action('delete_term', [$this, 'on_delete_term'], 10, 4);
 		add_action('query_filter_cron_rebuild', [$this, 'on_cron_rebuild']);
+		add_action('rest_api_init', [Query_Filter_Rest_Controller::class, 'register']);
+		add_filter('render_block_core/query', [$this, 'tag_query_block'], 10, 2);
 	}
 
 	public function on_save_post(int $post_id, \WP_Post $post): void {
@@ -67,5 +69,15 @@ final class Query_Filter_Plugin {
 
 	public function on_cron_rebuild(): void {
 		$this->indexer?->run_cron_batch();
+	}
+
+	public function tag_query_block(string $content, array $block): string {
+		$query_id = $block['attrs']['queryId'] ?? 0;
+		$processor = new \WP_HTML_Tag_Processor($content);
+		if ($processor->next_tag()) {
+			$processor->set_attribute('data-wp-interactive', 'query-filter');
+			$processor->set_attribute('data-query-filter-query', (string) $query_id);
+		}
+		return (string) $processor;
 	}
 }
