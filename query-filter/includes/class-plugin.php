@@ -43,6 +43,10 @@ final class Query_Filter_Plugin {
 		add_action('admin_menu', [Query_Filter_Admin::class, 'register']);
 		add_action('rest_api_init', [Query_Filter_Rest_Controller::class, 'register']);
 		add_filter('render_block_core/query', [$this, 'tag_query_block'], 10, 2);
+
+		if (defined('WP_CLI') && WP_CLI) {
+			\WP_CLI::add_command('query-filter index', Query_Filter_CLI::class);
+		}
 	}
 
 	public function on_save_post(int $post_id, \WP_Post $post): void {
