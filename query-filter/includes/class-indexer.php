@@ -12,6 +12,9 @@ final class Query_Filter_Indexer {
 	 */
 	public const TABLE_SUFFIX = 'query_filter_index';
 
+	public const CRON_HOOK = 'query_filter_cron_rebuild';
+	public const BATCH_SIZE = 10;
+
 	public static function table_name(): string {
 		global $wpdb;
 		return $wpdb->prefix . self::TABLE_SUFFIX;
@@ -92,5 +95,48 @@ final class Query_Filter_Indexer {
 	public function delete_for_post(int $post_id): void {
 		global $wpdb;
 		$wpdb->delete(self::table_name(), ['post_id' => $post_id]);
+	}
+
+	public static function schedule_full_rebuild(): void {
+		update_option('query_filter_rebuild_offset', 0);
+		if (! wp_next_scheduled(self::CRON_HOOK)) {
+			wp_schedule_single_event(time(), self::CRON_HOOK);
+		}
+	}
+
+	public function run_cron_batch(): void {
+		$offset = (int) get_option('query_filter_rebuild_offset', 0);
+
+		$post_ids = get_posts([
+			'post_type'      => 'any',
+			'post_status'    => 'publish',
+			'fields'         => 'ids',
+			'posts_per_page' => self::BATCH_SIZE,
+			'offset'         => $offset,
+			'orderby'        => 'ID',
+			'order'          => 'ASC',
+		]);
+
+		foreach ($post_ids as $post_id) {
+			$this->index_post($post_id);
+		}
+
+		if (count($post_ids) >= self::BATCH_SIZE) {
+			update_option('query_filter_rebuild_offset', $offset + self::BATCH_SIZE);
+			wp_schedule_single_event(time() + 5, self::CRON_HOOK);
+		} else {
+			delete_option('query_filter_rebuild_offset');
+			update_option('query_filter_last_indexed', time());
+		}
+	}
+
+	public function reindex_posts_for_term(int $term_id, string $taxonomy): void {
+		$post_ids = get_objects_in_term($term_id, $taxonomy);
+		if (is_wp_error($post_ids) || empty($post_ids)) {
+			return;
+		}
+		foreach ($post_ids as $post_id) {
+			$this->index_post((int) $post_id);
+		}
 	}
 }
