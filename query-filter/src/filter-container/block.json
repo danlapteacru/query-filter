@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "query-filter/filter-container",
+  "version": "0.1.0",
+  "title": "Filter Container",
+  "category": "theme",
+  "icon": "filter",
+  "description": "Groups filter blocks and links them to a Query Loop.",
+  "supports": {
+    "html": false,
+    "className": true,
+    "spacing": {
+      "margin": true,
+      "padding": true,
+      "blockGap": true
+    },
+    "layout": {
+      "default": { "type": "flex", "orientation": "vertical" }
+    },
+    "interactivity": true
+  },
+  "attributes": {
+    "queryId": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "providesContext": {
+    "query-filter/queryId": "queryId"
+  },
+  "textdomain": "query-filter",
+  "editorScript": "file:./index.js",
+  "viewScriptModule": "file:./view.js",
+  "render": "file:./render.php"
+}

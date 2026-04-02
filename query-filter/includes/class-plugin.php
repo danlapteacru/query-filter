@@ -35,6 +35,7 @@ final class Query_Filter_Plugin {
 			}
 		);
 
+		add_action('init', [$this, 'register_blocks']);
 		add_action('save_post', [$this, 'on_save_post'], 10, 2);
 		add_action('delete_post', [$this, 'on_delete_post']);
 		add_action('edited_term', [$this, 'on_edited_term'], 10, 3);
@@ -46,6 +47,24 @@ final class Query_Filter_Plugin {
 
 		if (defined('WP_CLI') && WP_CLI) {
 			\WP_CLI::add_command('query-filter index', Query_Filter_CLI::class);
+		}
+	}
+
+	public function register_blocks(): void {
+		$build_dir = dirname(QUERY_FILTER_PLUGIN_FILE) . '/build';
+		$blocks = [
+			'filter-container',
+			'filter-checkboxes',
+			'filter-search',
+			'filter-sort',
+			'filter-pager',
+			'filter-reset',
+		];
+		foreach ($blocks as $block) {
+			$block_dir = $build_dir . '/' . $block;
+			if (file_exists($block_dir . '/block.json')) {
+				register_block_type($block_dir);
+			}
 		}
 	}
 
