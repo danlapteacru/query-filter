@@ -27,7 +27,36 @@ final class Query_Filter_Filter_Checkboxes extends Query_Filter_Filter {
 	}
 
 	public function load_values(array $params): array {
-		// Implemented in Task 6.
-		return [];
+		global $wpdb;
+		$table = Query_Filter_Indexer::table_name();
+
+		$where = 'WHERE filter_name = %s';
+		$bind  = [$this->filter_name];
+
+		if (! empty($params['post_ids'])) {
+			$id_placeholders = implode(',', array_fill(0, count($params['post_ids']), '%d'));
+			$where .= " AND post_id IN ({$id_placeholders})";
+			$bind = array_merge($bind, $params['post_ids']);
+		}
+
+		$sql = $wpdb->prepare(
+			"SELECT filter_value AS value, display_value AS label, COUNT(DISTINCT post_id) AS count
+			 FROM {$table}
+			 {$where}
+			 GROUP BY filter_value, display_value
+			 ORDER BY count DESC, display_value ASC",
+			$bind
+		);
+
+		$rows = $wpdb->get_results($sql, ARRAY_A);
+		if (! $rows) {
+			return [];
+		}
+
+		return array_map(static fn(array $row): array => [
+			'value' => $row['value'],
+			'label' => $row['label'],
+			'count' => (int) $row['count'],
+		], $rows);
 	}
 }
