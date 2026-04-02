@@ -51,4 +51,46 @@ final class Query_Filter_Indexer {
 		$sql = self::get_create_table_sql( $table, $charset_collate );
 		dbDelta( $sql );
 	}
+
+	// -------------------------------------------------------------------------
+	// Instance methods: filter registry and row operations
+	// -------------------------------------------------------------------------
+
+	/** @var Query_Filter_Filter[] */
+	private array $filters = [];
+
+	public function register_filter(Query_Filter_Filter $filter): void {
+		$this->filters[ $filter->get_name() ] = $filter;
+	}
+
+	public function get_filter(string $name): ?Query_Filter_Filter {
+		return $this->filters[ $name ] ?? null;
+	}
+
+	/** @return Query_Filter_Filter[] */
+	public function get_filters(): array {
+		return $this->filters;
+	}
+
+	public function index_post(int $post_id): void {
+		global $wpdb;
+		$table = self::table_name();
+
+		foreach ($this->filters as $filter) {
+			$wpdb->delete($table, [
+				'post_id'     => $post_id,
+				'filter_name' => $filter->get_name(),
+			]);
+
+			$rows = $filter->index_post($post_id);
+			foreach ($rows as $row) {
+				$wpdb->insert($table, $row);
+			}
+		}
+	}
+
+	public function delete_for_post(int $post_id): void {
+		global $wpdb;
+		$wpdb->delete(self::table_name(), ['post_id' => $post_id]);
+	}
 }
