@@ -40,6 +40,7 @@ final class Query_Filter_Plugin {
 		add_action('edited_term', [$this, 'on_edited_term'], 10, 3);
 		add_action('delete_term', [$this, 'on_delete_term'], 10, 4);
 		add_action('query_filter_cron_rebuild', [$this, 'on_cron_rebuild']);
+		add_action('admin_menu', [Query_Filter_Admin::class, 'register']);
 		add_action('rest_api_init', [Query_Filter_Rest_Controller::class, 'register']);
 		add_filter('render_block_core/query', [$this, 'tag_query_block'], 10, 2);
 	}
