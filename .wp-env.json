@@ -1,5 +1,10 @@
 {
-	"core": "WordPress/WordPress#6.7",
-	"phpVersion": "8.1",
-	"plugins": ["."]
+  "core": null,
+  "plugins": [ "." ],
+  "phpVersion": "8.1",
+  "env": {
+    "tests": {
+      "plugins": [ "." ]
+    }
+  }
 }

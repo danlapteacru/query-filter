@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<phpunit
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+	bootstrap="tests/phpunit/integration/bootstrap.php"
+	colors="true"
+	cacheDirectory=".phpunit.cache"
+>
+	<testsuites>
+		<testsuite name="integration">
+			<directory>tests/phpunit/integration</directory>
+		</testsuite>
+	</testsuites>
+	<source>
+		<include>
+			<directory suffix=".php">includes</directory>
+		</include>
+	</source>
+</phpunit>

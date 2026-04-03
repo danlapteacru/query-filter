@@ -2,11 +2,19 @@
 	"name": "query-filter",
 	"private": true,
 	"scripts": {
-		"build": "wp-scripts build",
+		"build": "WP_EXPERIMENTAL_MODULES=true wp-scripts build --webpack-src-dir=src --output-path=build",
+		"start": "WP_EXPERIMENTAL_MODULES=true wp-scripts start --webpack-src-dir=src --output-path=build",
 		"test:unit": "wp-scripts test-unit-js"
 	},
 	"devDependencies": {
+		"@wordpress/blocks": "^14.0.0",
+		"@wordpress/block-editor": "^14.0.0",
+		"@wordpress/components": "^29.0.0",
+		"@wordpress/data": "^10.0.0",
 		"@wordpress/env": "^10.0.0",
+		"@wordpress/i18n": "^5.0.0",
+		"@wordpress/interactivity": "^6.0.0",
+		"@wordpress/interactivity-router": "^2.0.0",
 		"@wordpress/scripts": "^30.0.0"
 	}
 }
