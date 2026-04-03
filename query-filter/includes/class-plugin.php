@@ -101,6 +101,7 @@ final class Query_Filter_Plugin {
 		if ($processor->next_tag()) {
 			$processor->set_attribute('data-wp-interactive', 'query-filter');
 			$processor->set_attribute('data-query-filter-query', (string) $query_id);
+			$processor->set_attribute('data-wp-class--query-filter-loading', 'state.loading');
 		}
 		return (string) $processor;
 	}
