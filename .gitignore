@@ -1,3 +1,7 @@
 old/
 .superpowers/
 .worktrees/
+node_modules/
+vendor/
+build/
+.phpunit.cache/
