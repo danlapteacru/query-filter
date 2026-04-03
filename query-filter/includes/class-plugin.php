@@ -35,6 +35,7 @@ final class Query_Filter_Plugin {
 			}
 		);
 
+		add_action('init', [$this, 'configure_indexer'], 5);
 		add_action('init', [$this, 'register_blocks']);
 		add_action('save_post', [$this, 'on_save_post'], 10, 2);
 		add_action('delete_post', [$this, 'on_delete_post']);
@@ -47,6 +48,18 @@ final class Query_Filter_Plugin {
 
 		if (defined('WP_CLI') && WP_CLI) {
 			\WP_CLI::add_command('query-filter index', Query_Filter_CLI::class);
+		}
+	}
+
+	public function configure_indexer(): void {
+		$this->indexer = new Query_Filter_Indexer();
+
+		// Register filters based on saved filter configs.
+		// For MVP: scan for registered taxonomies and register a checkbox filter for each public one.
+		$taxonomies = get_taxonomies(['public' => true], 'names');
+		foreach ($taxonomies as $taxonomy) {
+			$source = new Query_Filter_Source_Taxonomy($taxonomy);
+			$this->indexer->register_filter(new Query_Filter_Filter_Checkboxes($taxonomy, $source));
 		}
 	}
 
