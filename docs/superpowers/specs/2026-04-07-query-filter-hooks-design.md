@@ -1,15 +1,16 @@
 # Query Filter — hooks and front-end markup overrides
 
 **Date:** 2026-04-07  
-**Status:** Implemented
+**Status:** Implemented (updated: extensible block list + runtime block names)
 
 ---
 
 ## Goals
 
-1. **Extension points** — `apply_filters` / optional `do_action` at stable boundaries without forking plugin files.
-2. **Front markup** — Themes and plugins can change HTML from block `render.php` output while keeping Interactivity attributes (`data-wp-interactive`, `data-wp-context`, `data-wp-on--*`) intact when they do string-level edits.
-3. **REST** — Response payload filterable for integrations (e.g. analytics wrappers, extra keys).
+1. **Extension points** — `apply_filters` at stable boundaries without forking plugin files.
+2. **Front markup** — Themes/plugins change HTML from `render.php` while preserving Interactivity attributes when doing string edits.
+3. **REST** — Response payload filterable for integrations.
+4. **No duplicated block names** — Render templates use **`$block->name`** (from `block.json`). Built-in blocks are listed once in **`Query_Filter_Blocks::DEFAULT_BUILD_DIRECTORIES`**; extensions append via **`query_filter/blocks/build_directories`**.
 
 ---
 
@@ -17,33 +18,30 @@
 
 | Hook | Type | Args | Notes |
 |------|------|------|--------|
-| `query_filter/render/block` | filter | `$html` (string), `$block_name` (string), `$attributes` (array), `$context` (array\|null) | Runs on **final** buffered markup for each block `render.php`. `$context` is the Interactivity context array when applicable; otherwise `null`. |
-| `query_filter/render/checkboxes/context` | filter | `$context` (array), `$attributes` (array) | Runs **before** `wp_json_encode` for checkbox blocks. Must return an **array** or the original is kept. |
-| `query_filter/rest/response` | filter | `$data` (array) | Keys: `results_html`, `filters`, `total`, `pages`. Return must remain array-shaped for the client. |
-
----
-
-## Actions (reserved)
-
-Future: `query_filter/render/before`, `query_filter/rest/before_handle` — not required for MVP; filters cover primary use cases.
+| `query_filter/blocks/build_directories` | filter | `list<string>` build subdirs | Folders under `build/` that contain `block.json`. |
+| `query_filter/render/block` | filter | `$html`, `$block_name`, `$attributes`, `$context` | `$block_name` = `WP_Block::$name`. |
+| `query_filter/render/interactivity_context` | filter | `$context`, `$attributes`, `$block_name` | Generic context filter before JSON encode. |
+| `query_filter/render/checkboxes/context` | filter | `$context`, `$attributes` | **Legacy**; still run for checkbox block before the generic filter. |
+| `query_filter/rest/response` | filter | `$data` (array) | Keys: `results_html`, `filters`, `total`, `pages`. |
 
 ---
 
 ## WordPress core alternative
 
-Themes may use `add_filter( 'render_block', … )` and inspect `$block['blockName']` (e.g. `query-filter/filter-checkboxes`). No plugin hook required; document risk of breaking Interactivity if attributes are removed.
+`add_filter( 'render_block', … )` using `$block['blockName']`.
 
 ---
 
 ## Safety
 
-- Do not remove or corrupt `data-wp-context` JSON for interactive blocks unless the theme also replaces the Interactivity store behavior.
-- REST: changing `filters` shape may break `view.js` unless the client is updated.
+- Preserve `data-wp-context` / directives unless replacing Interactivity behavior.
+- REST: changing `filters` shape may break `view.js`.
 
 ---
 
 ## Implementation
 
-- `Query_Filter_Render_Hooks` in `includes/class-render-hooks.php` — `block_html()`, `checkboxes_context()`.
-- Each `src/*/render.php` buffers output and passes through `block_html()`.
-- `Query_Filter_Rest_Controller::handle` applies `query_filter/rest/response` before `WP_REST_Response`.
+- `Query_Filter_Blocks` — default directories + `get_build_directories()`.
+- `Query_Filter_Plugin::register_blocks()` uses `Query_Filter_Blocks::get_build_directories()`.
+- `Query_Filter_Render_Hooks` — `block_html()`, `filter_interactivity_context()`, `filter_checkboxes_interactivity_context()` (legacy + generic).
+- Block `render.php` files use `$block->name` for hook arguments.

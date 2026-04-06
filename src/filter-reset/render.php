@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * @var WP_Block $block
+ */
+
+$block_name = ( isset( $block ) && $block instanceof WP_Block ) ? $block->name : '';
+
 $label = $attributes['label'] ?? __( 'Reset Filters', 'query-filter' );
 
 ob_start();
@@ -19,9 +25,4 @@ ob_start();
 	</button>
 </div>
 <?php
-echo Query_Filter_Render_Hooks::block_html(
-	ob_get_clean(),
-	Query_Filter_Render_Hooks::BLOCK_FILTER_RESET,
-	$attributes,
-	null
-);
+echo Query_Filter_Render_Hooks::block_html( ob_get_clean(), $block_name, $attributes, null );

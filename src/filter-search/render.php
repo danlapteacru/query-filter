@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * @var WP_Block $block
+ */
+
+$block_name = ( isset( $block ) && $block instanceof WP_Block ) ? $block->name : '';
+
 $label       = $attributes['label'] ?? 'Search';
 $show_label  = $attributes['showLabel'] ?? true;
 $placeholder = $attributes['placeholder'] ?? 'Search...';
@@ -23,9 +29,4 @@ ob_start();
 	/>
 </div>
 <?php
-echo Query_Filter_Render_Hooks::block_html(
-	ob_get_clean(),
-	Query_Filter_Render_Hooks::BLOCK_FILTER_SEARCH,
-	$attributes,
-	null
-);
+echo Query_Filter_Render_Hooks::block_html( ob_get_clean(), $block_name, $attributes, null );

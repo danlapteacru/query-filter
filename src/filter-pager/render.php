@@ -2,7 +2,13 @@
 
 declare(strict_types=1);
 
-$query_id = $block->context['queryId'] ?? 0;
+/**
+ * @var WP_Block $block
+ */
+
+$block_name = ( isset( $block ) && $block instanceof WP_Block ) ? $block->name : '';
+
+$query_id = ( isset( $block ) && $block instanceof WP_Block ) ? (int) ( $block->context['queryId'] ?? 0 ) : 0;
 
 $context = [
 	'queryId' => $query_id,
@@ -29,9 +35,4 @@ ob_start();
 	><?php esc_html_e( 'Next', 'query-filter' ); ?> &raquo;</button>
 </nav>
 <?php
-echo Query_Filter_Render_Hooks::block_html(
-	ob_get_clean(),
-	Query_Filter_Render_Hooks::BLOCK_FILTER_PAGER,
-	$attributes,
-	$context
-);
+echo Query_Filter_Render_Hooks::block_html( ob_get_clean(), $block_name, $attributes, $context );

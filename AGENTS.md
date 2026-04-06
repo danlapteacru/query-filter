@@ -5,7 +5,7 @@ This repository is the **Query Filter** WordPress plugin: block-based, index-bac
 ## Quick map
 
 - **PHP**: `includes/` (`class-plugin.php`, `class-rest-controller.php`, `class-request.php`, `class-query-engine.php`, `class-renderer.php`, `class-indexer.php`, `filters/`, `sources/`).
-- **Blocks**: `src/<block>/` → **`npm run build`** → `build/` (ignored by git). Block HTML passes through **`query_filter/render/block`**; REST through **`query_filter/rest/response`** (see README).
+- **Blocks**: `src/<block>/` → **`npm run build`** → `build/` (ignored by git). Registration uses **`Query_Filter_Blocks::get_build_directories()`** (filter **`query_filter/blocks/build_directories`**). Render hooks use **`$block->name`**; see README.
 - **Tests**: `tests/phpunit/unit/` (default PHPUnit), `tests/phpunit/integration/` (needs WordPress test lib), `tests/js/` (Jest).
 
 ## Commands

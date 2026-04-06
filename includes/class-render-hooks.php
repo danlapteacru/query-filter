@@ -4,28 +4,22 @@ declare(strict_types=1);
 
 /**
  * WordPress hooks for block markup and REST responses.
+ * Block names are taken from {@see WP_Block::$name} in templates — not duplicated here.
  */
 final class Query_Filter_Render_Hooks {
-
-	public const BLOCK_FILTER_CONTAINER  = 'query-filter/filter-container';
-	public const BLOCK_FILTER_CHECKBOXES = 'query-filter/filter-checkboxes';
-	public const BLOCK_FILTER_SEARCH     = 'query-filter/filter-search';
-	public const BLOCK_FILTER_SORT       = 'query-filter/filter-sort';
-	public const BLOCK_FILTER_RESET      = 'query-filter/filter-reset';
-	public const BLOCK_FILTER_PAGER      = 'query-filter/filter-pager';
 
 	/**
 	 * Filter final HTML for a block render template.
 	 *
-	 * @param array<string, mixed>  $attributes Block attributes.
-	 * @param array<string, mixed>|null $context  Interactivity context when applicable.
+	 * @param array<string, mixed>      $attributes Block attributes.
+	 * @param array<string, mixed>|null $context    Interactivity context when applicable.
 	 */
 	public static function block_html( string $html, string $block_name, array $attributes, ?array $context = null ): string {
 		/**
 		 * Front-end markup for a Query Filter block (after the template runs).
 		 *
 		 * @param string               $html        Buffered HTML.
-		 * @param string               $block_name  e.g. query-filter/filter-checkboxes.
+		 * @param string               $block_name  Registered block name from block.json (e.g. query-filter/filter-checkboxes).
 		 * @param array<string, mixed> $attributes  Block attributes.
 		 * @param array<string, mixed>|null $context Interactivity data-wp-context payload, or null.
 		 */
@@ -39,23 +33,45 @@ final class Query_Filter_Render_Hooks {
 	}
 
 	/**
+	 * Interactivity context before JSON encoding (any block may use this from its render template).
+	 *
 	 * @param array<string, mixed> $context
 	 * @param array<string, mixed> $attributes
 	 * @return array<string, mixed>
 	 */
-	public static function checkboxes_context( array $context, array $attributes ): array {
+	public static function filter_interactivity_context( array $context, array $attributes, string $block_name ): array {
 		/**
-		 * Checkbox block Interactivity context before JSON encoding.
+		 * Interactivity context array before wp_json_encode for data-wp-context.
 		 *
-		 * @param array<string, mixed> $context    Keys: filterName, logic, options, selected.
-		 * @param array<string, mixed> $attributes Block attributes.
+		 * @param array<string, mixed> $context
+		 * @param array<string, mixed> $attributes
+		 * @param string               $block_name Registered block name.
 		 */
-		$filtered = apply_filters( 'query_filter/render/checkboxes/context', $context, $attributes );
+		$filtered = apply_filters( 'query_filter/render/interactivity_context', $context, $attributes, $block_name );
 
 		if ( ! is_array( $filtered ) ) {
 			return $context;
 		}
 
 		return $filtered;
+	}
+
+	/**
+	 * Checkbox block: legacy hook then generic interactivity filter.
+	 *
+	 * @param array<string, mixed> $context
+	 * @param array<string, mixed> $attributes
+	 * @return array<string, mixed>
+	 */
+	public static function filter_checkboxes_interactivity_context( array $context, array $attributes, string $block_name ): array {
+		/**
+		 * @deprecated Use {@see 'query_filter/render/interactivity_context'} and check `$block_name`.
+		 */
+		$legacy = apply_filters( 'query_filter/render/checkboxes/context', $context, $attributes );
+		if ( is_array( $legacy ) ) {
+			$context = $legacy;
+		}
+
+		return self::filter_interactivity_context( $context, $attributes, $block_name );
 	}
 }

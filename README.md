@@ -96,42 +96,60 @@ Typical JSON fields:
 
 The plugin exposes **WordPress filters** so themes and companion plugins can change **markup** and **REST payloads** without editing plugin files. Design notes: [`docs/superpowers/specs/2026-04-07-query-filter-hooks-design.md`](docs/superpowers/specs/2026-04-07-query-filter-hooks-design.md).
 
+### Registering more blocks (extensions)
+
+Built-in blocks are registered from folders under `build/` listed in **`Query_Filter_Blocks::DEFAULT_BUILD_DIRECTORIES`** (`includes/class-blocks.php`). To add blocks from another plugin without editing core plugin code, use:
+
+```php
+add_filter( 'query_filter/blocks/build_directories', function ( array $dirs ) {
+	$dirs[] = 'my-addon-filter'; // build/my-addon-filter/block.json
+	return $dirs;
+} );
+```
+
+The **block name** passed to render hooks is always the `name` from that block’s `block.json` (available in templates as `$block->name`), so you do not need to duplicate strings across PHP files.
+
 ### Supported filters
 
 | Hook | When it runs | Arguments |
 |------|----------------|-----------|
-| **`query_filter/render/block`** | After each filter block’s `render.php` template has printed | `$html` (string), `$block_name` (string), `$attributes` (array), `$context` (array\|null) |
-| **`query_filter/render/checkboxes/context`** | Before `data-wp-context` is JSON-encoded for **Filter: Checkboxes** | `$context` (array), `$attributes` (array) — **must return an array** (or the original is kept) |
-| **`query_filter/rest/response`** | Before the REST response is sent for `POST …/query-filter/v1/results` | `$data` with keys `results_html`, `filters`, `total`, `pages` — **must return an array** |
+| **`query_filter/blocks/build_directories`** | During `init` block registration | `list<string>` folder names under `build/` |
+| **`query_filter/render/block`** | After each block’s `render.php` template has printed | `$html`, `$block_name` (from `WP_Block`), `$attributes`, `$context` (array\|null) |
+| **`query_filter/render/interactivity_context`** | When a template calls the helper before `data-wp-context` JSON | `$context`, `$attributes`, `$block_name` — **return an array** |
+| **`query_filter/render/checkboxes/context`** | *(Legacy)* Same as above but only chained for the checkbox block | `$context`, `$attributes` — prefer **`query_filter/render/interactivity_context`** and inspect `$block_name` |
+| **`query_filter/rest/response`** | Before the REST response for `POST …/query-filter/v1/results` | `$data`: `results_html`, `filters`, `total`, `pages` — **must return an array** |
 
-**Block names** for `query_filter/render/block` match block registration, e.g. `query-filter/filter-checkboxes`, `query-filter/filter-container`, `query-filter/filter-search`, `query-filter/filter-sort`, `query-filter/filter-reset`, `query-filter/filter-pager`.
-
-### Example: wrap checkbox markup (PHP)
+### Example: wrap one block’s markup (PHP)
 
 ```php
 add_filter( 'query_filter/render/block', function ( $html, $block_name, $attributes, $context ) {
-	if ( 'query-filter/filter-checkboxes' !== $block_name ) {
+	if ( ! str_ends_with( $block_name, '/filter-checkboxes' ) ) {
 		return $html;
 	}
 	return '<div class="my-theme-filter-card">' . $html . '</div>';
 }, 10, 4 );
 ```
 
+Use your block’s real `block.json` `name`, or match on a suffix/prefix your namespace uses.
+
 Keep **`data-wp-interactive`**, **`data-wp-context`**, and **`data-wp-on--*`** intact unless you replace the Interactivity behavior as well.
 
-### Example: checkbox context (PHP)
+### Example: interactivity context (PHP)
 
-Use only to adjust **presentation-related** context (e.g. trimming labels). Changing `filterName` or `logic` can desync the client store.
+Use only to adjust **presentation-related** context. Changing `filterName` or `logic` on checkbox blocks can desync the client store.
 
 ```php
-add_filter( 'query_filter/render/checkboxes/context', function ( $context, $attributes ) {
+add_filter( 'query_filter/render/interactivity_context', function ( $context, $attributes, $block_name ) {
+	if ( ! str_ends_with( $block_name, '/filter-checkboxes' ) ) {
+		return $context;
+	}
 	return $context; // return modified array
-}, 10, 2 );
+}, 10, 3 );
 ```
 
 ### Without plugin hooks (core WordPress)
 
-You can use **`render_block`** and check `$block['blockName']` for `query-filter/*`. Same warning: do not strip Interactivity attributes unless you know the impact.
+You can use **`render_block`** and compare `$block['blockName']` to your block’s registered name. Same warning: do not strip Interactivity attributes unless you know the impact.
 
 ### CSS-only (no PHP)
 
@@ -148,7 +166,8 @@ includes/                 # PHP (classmap autoload)
   class-rest-controller.php
   class-request.php       # REST JSON → request DTO
   class-renderer.php      # Renders Query Loop for IDs
-  class-render-hooks.php  # apply_filters helpers for block HTML + REST
+  class-blocks.php          # Default build/ block dirs; filterable for extensions
+  class-render-hooks.php    # apply_filters helpers for block HTML + REST
   filters/                # Filter types
   sources/                # Data sources (taxonomy, meta, …)
 src/                      # Block source (JS + render.php)

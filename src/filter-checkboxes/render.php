@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * @var WP_Block $block
+ */
+
+$block_name = ( isset( $block ) && $block instanceof WP_Block ) ? $block->name : '';
+
 $filter_name = $attributes['filterName'] ?? '';
 $source_type = $attributes['sourceType'] ?? 'taxonomy';
 $source_key  = $attributes['sourceKey'] ?? 'category';
@@ -11,12 +17,7 @@ $show_counts = $attributes['showCounts'] ?? true;
 $logic       = $attributes['logic'] ?? 'OR';
 
 if ( empty( $filter_name ) ) {
-	echo Query_Filter_Render_Hooks::block_html(
-		'',
-		Query_Filter_Render_Hooks::BLOCK_FILTER_CHECKBOXES,
-		$attributes,
-		[]
-	);
+	echo Query_Filter_Render_Hooks::block_html( '', $block_name, $attributes, [] );
 	return;
 }
 
@@ -35,7 +36,7 @@ $context = [
 	'selected'   => [],
 ];
 
-$context = Query_Filter_Render_Hooks::checkboxes_context( $context, $attributes );
+$context = Query_Filter_Render_Hooks::filter_checkboxes_interactivity_context( $context, $attributes, $block_name );
 
 ob_start();
 ?>
@@ -65,9 +66,4 @@ ob_start();
 	</fieldset>
 </div>
 <?php
-echo Query_Filter_Render_Hooks::block_html(
-	ob_get_clean(),
-	Query_Filter_Render_Hooks::BLOCK_FILTER_CHECKBOXES,
-	$attributes,
-	$context
-);
+echo Query_Filter_Render_Hooks::block_html( ob_get_clean(), $block_name, $attributes, $context );

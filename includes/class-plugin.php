@@ -65,16 +65,8 @@ final class Query_Filter_Plugin {
 
 	public function register_blocks(): void {
 		$build_dir = dirname( QUERY_FILTER_PLUGIN_FILE ) . '/build';
-		$blocks    = array(
-			'filter-container',
-			'filter-checkboxes',
-			'filter-search',
-			'filter-sort',
-			'filter-pager',
-			'filter-reset',
-		);
-		foreach ( $blocks as $block ) {
-			$block_dir = $build_dir . '/' . $block;
+		foreach ( Query_Filter_Blocks::get_build_directories() as $subdir ) {
+			$block_dir = $build_dir . '/' . $subdir;
 			if ( file_exists( $block_dir . '/block.json' ) ) {
 				register_block_type( $block_dir );
 			}
