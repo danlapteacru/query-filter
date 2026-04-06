@@ -8,6 +8,8 @@ declare(strict_types=1);
  * @var WP_Block $block      Block instance.
  */
 
+$block_name = ( isset( $block ) && $block instanceof WP_Block ) ? $block->name : '';
+
 $query_id_requested = (int) ( $attributes['queryId'] ?? 0 );
 $filters_relationship = strtoupper( (string) ( $attributes['filtersRelationship'] ?? 'AND' ) );
 if ( 'OR' !== $filters_relationship ) {
@@ -54,9 +56,11 @@ $context = [
 	'queryId' => $effective_query_id,
 ];
 
+ob_start();
 printf(
-    '<div %s data-wp-interactive="query-filter" data-wp-class--query-filter-loading="state.loading" data-wp-context=\'%s\'>%s</div>',
-    get_block_wrapper_attributes(),
-    wp_json_encode( $context ),
-    $content
+	'<div %s data-wp-interactive="query-filter" data-wp-class--query-filter-loading="state.loading" data-wp-context=\'%s\'>%s</div>',
+	get_block_wrapper_attributes(),
+	wp_json_encode( $context ),
+	$content
 );
+echo Query_Filter_Render_Hooks::block_html( ob_get_clean(), $block_name, $attributes, $context );

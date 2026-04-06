@@ -47,16 +47,18 @@ description: >-
 - Sort block: **`.wp-block-query-filter-filter-sort`**.
 - Container pushes URL state: filter param names = filter keys; **`search`**, **`pg`**, **`frel`** (between-filter OR); avoid legacy `qf_` prefix.
 - Server injects initial state via `wp_interactivity_state( 'query-filter', … )` in `render.php` files.
+- **Hooks:** `query_filter/blocks/build_directories`, `query_filter/render/block`, `query_filter/render/interactivity_context`, legacy `…/checkboxes/context`, `query_filter/rest/response` — see README. Templates use `$block->name`, not duplicated constants.
 
 ## Verification
 
+**Before push**, mirror GitHub Actions (`.github/workflows/ci.yml`):
+
 ```bash
-npm run build
-npm run lint
-composer check
-composer test
-npm run test:unit
+composer test && composer phpstan && composer lint:php
+npm run lint:js && npm run lint:pkg-json && npm run test:unit && npm run build
 ```
+
+Quick PHP-only: `composer check` (PHPStan + PHPCS, no PHPUnit).
 
 Integration suite (full WP): `WP_TESTS_DIR=… ./vendor/bin/phpunit -c phpunit-integration.xml.dist` when available.
 

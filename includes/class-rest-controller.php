@@ -98,13 +98,23 @@ final class Query_Filter_Rest_Controller {
 			}
 		}
 
-		return new \WP_REST_Response(
-			array(
-				'results_html' => $render_result['results_html'],
-				'filters'      => $filter_states,
-				'total'        => $render_result['total'],
-				'pages'        => $render_result['pages'],
-			)
+		$data = array(
+			'results_html' => $render_result['results_html'],
+			'filters'      => $filter_states,
+			'total'        => $render_result['total'],
+			'pages'        => $render_result['pages'],
 		);
+
+		/**
+		 * REST JSON payload for POST query-filter/v1/results.
+		 *
+		 * @param array{results_html: string, filters: array<string, mixed>, total: int, pages: int} $data
+		 */
+		$filtered = apply_filters( 'query_filter/rest/response', $data );
+		if ( is_array( $filtered ) ) {
+			$data = $filtered;
+		}
+
+		return new \WP_REST_Response( $data );
 	}
 }

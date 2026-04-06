@@ -6,5 +6,8 @@ alwaysApply: true
 # Repo workflow (Query Filter)
 
 - Implement on a **feature branch**; avoid committing product changes only to `main` without a branch/PR.
-- Before claiming tests pass: `composer test`, `composer check`, `npm run lint`, `npm run test:unit`; after `src/` edits, `npm run build`.
+- **Before push:** run the same checks as GitHub Actions CI (see `.github/workflows/ci.yml`) so CI failures are caught locally:
+  - PHP: `composer test`, `composer phpstan`, `composer lint:php` (after `composer install` if deps changed).
+  - JS: `npm run lint:js`, `npm run lint:pkg-json`, `npm run test:unit`, `npm run build` (after `npm ci` if lockfile changed).
+- For quick iteration without a full push gate, `composer check` runs PHPStan + PHPCS only (CI also runs `composer test`).
 - Design/specs: `docs/superpowers/specs/`; implementation plans: `docs/superpowers/plans/`.
