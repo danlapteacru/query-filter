@@ -51,13 +51,14 @@ description: >-
 
 ## Verification
 
+**Before push**, mirror GitHub Actions (`.github/workflows/ci.yml`):
+
 ```bash
-npm run build
-npm run lint
-composer check
-composer test
-npm run test:unit
+composer test && composer phpstan && composer lint:php
+npm run lint:js && npm run lint:pkg-json && npm run test:unit && npm run build
 ```
+
+Quick PHP-only: `composer check` (PHPStan + PHPCS, no PHPUnit).
 
 Integration suite (full WP): `WP_TESTS_DIR=… ./vendor/bin/phpunit -c phpunit-integration.xml.dist` when available.
 
