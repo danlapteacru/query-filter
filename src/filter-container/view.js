@@ -10,6 +10,8 @@ const SORT_BLOCK_SELECTOR = '.wp-block-query-filter-filter-sort';
 const URL_SEARCH = 'search';
 /** Not `page` / `paged` — those are WordPress query vars. */
 const URL_PAGE = 'pg';
+/** Between-filter mode: `and` (default) or `or`. */
+const URL_FILTERS_RELATIONSHIP = 'frel';
 
 /**
  * REST returns a full core/query render; the live DOM already has the outer
@@ -79,20 +81,53 @@ function syncCheckboxDomFromStore() {
 }
 
 /**
- * Plain object for JSON.stringify (avoids proxy/getter edge cases in some runtimes).
+ * Per-filter within-filter logic from checkbox block `data-wp-context` (authoritative on front).
  *
- * @return {Record<string, string[]>}
+ * @return {Record<string, 'AND'|'OR'>}
+ */
+function collectCheckboxFilterLogicByName() {
+	/** @type {Record<string, 'AND'|'OR'>} */
+	const map = {};
+	document.querySelectorAll( CHECKBOXES_BLOCK_SELECTOR ).forEach( ( block ) => {
+		try {
+			const ctx = JSON.parse(
+				block.getAttribute( 'data-wp-context' ) || '{}'
+			);
+			const name = ctx.filterName;
+			if ( typeof name !== 'string' || name === '' ) {
+				return;
+			}
+			const L = String( ctx.logic || 'OR' ).toUpperCase();
+			map[ name ] = L === 'AND' ? 'AND' : 'OR';
+		} catch {
+			// ignore
+		}
+	} );
+	return map;
+}
+
+/**
+ * REST `filters` object: values + per-filter logic.
+ *
+ * @return {Record<string, { values: string[], logic: string }>}
  */
 function filtersPayloadFromStore() {
 	const { state } = store( 'query-filter' );
 	const raw = state._filters || {};
-	/** @type {Record<string, string[]>} */
+	const logicByName = collectCheckboxFilterLogicByName();
+	/** @type {Record<string, { values: string[], logic: string }>} */
 	const out = {};
 	for ( const key of Object.keys( raw ) ) {
 		const arr = raw[ key ];
-		if ( Array.isArray( arr ) ) {
-			out[ key ] = arr.filter( ( v ) => typeof v === 'string' );
+		if ( ! Array.isArray( arr ) ) {
+			continue;
 		}
+		const values = arr.filter( ( v ) => typeof v === 'string' );
+		if ( values.length === 0 ) {
+			continue;
+		}
+		const logic = logicByName[ key ] || 'OR';
+		out[ key ] = { values, logic };
 	}
 	return out;
 }
@@ -137,6 +172,7 @@ function pushFilterStateToUrl( stripEntireQuery = false ) {
 	const strip = collectCheckboxFilterUrlKeys();
 	strip.add( URL_SEARCH );
 	strip.add( URL_PAGE );
+	strip.add( URL_FILTERS_RELATIONSHIP );
 	for ( const key of strip ) {
 		url.searchParams.delete( key );
 	}
@@ -160,6 +196,10 @@ function pushFilterStateToUrl( stripEntireQuery = false ) {
 	}
 	if ( state.currentPage > 1 ) {
 		url.searchParams.set( URL_PAGE, String( state.currentPage ) );
+	}
+	const rel = String( state.filtersRelationship || 'AND' ).toUpperCase();
+	if ( rel === 'OR' ) {
+		url.searchParams.set( URL_FILTERS_RELATIONSHIP, 'or' );
 	}
 	history.pushState( null, '', url );
 }
@@ -232,6 +272,8 @@ const { state } = store( 'query-filter', {
 		loading: false,
 		error: '',
 		filterStates: {},
+		filtersRelationship: 'AND',
+		initialFiltersRelationship: 'AND',
 	},
 	actions: {
 		setFilter( filterName, values ) {
@@ -281,6 +323,10 @@ const { state } = store( 'query-filter', {
 				colon === -1 ? 'DESC' : def.slice( colon + 1 ).toUpperCase();
 			state.order =
 				ord === 'ASC' || ord === 'DESC' ? ord : 'DESC';
+			const initRel = String(
+				state.initialFiltersRelationship || 'AND'
+			).toUpperCase();
+			state.filtersRelationship = initRel === 'OR' ? 'OR' : 'AND';
 			syncCheckboxDomFromStore();
 			pushFilterStateToUrl( true );
 			store( 'query-filter' ).actions.fetchResults();
@@ -299,6 +345,11 @@ const { state } = store( 'query-filter', {
 					body: JSON.stringify( {
 						queryId: state.queryId,
 						pageId: state.pageId,
+						filtersRelationship: String(
+							state.filtersRelationship || 'AND'
+						).toUpperCase() === 'OR'
+							? 'OR'
+							: 'AND',
 						filters: filtersPayloadFromStore(),
 						page: state.currentPage,
 						orderby: state.orderby,
@@ -335,3 +386,22 @@ const { state } = store( 'query-filter', {
 		},
 	},
 } );
+
+/**
+ * Optional URL override for between-filter mode (`frel=or` / `frel=and`).
+ */
+function hydrateFiltersRelationshipFromUrl() {
+	const { state } = store( 'query-filter' );
+	const raw = new URL( window.location.href ).searchParams.get(
+		URL_FILTERS_RELATIONSHIP
+	);
+	if ( raw === 'or' ) {
+		state.filtersRelationship = 'OR';
+		return;
+	}
+	if ( raw === 'and' ) {
+		state.filtersRelationship = 'AND';
+	}
+}
+
+hydrateFiltersRelationshipFromUrl();

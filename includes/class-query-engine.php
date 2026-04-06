@@ -5,12 +5,41 @@ declare(strict_types=1);
 final class Query_Filter_Query_Engine {
 
 	/**
+	 * Combine per-filter post ID sets (AND = intersect, OR = union).
+	 *
+	 * @param array<int, int[]> $sets Non-empty list of post ID lists.
+	 * @return int[]
+	 */
+	public static function combine_post_id_sets(array $sets, string $between_filters_logic): array {
+		if ($sets === []) {
+			return [];
+		}
+
+		$rel = strtoupper($between_filters_logic);
+		if ($rel === 'OR') {
+			$merged = [];
+			foreach ($sets as $set) {
+				$merged = array_merge($merged, $set);
+			}
+
+			return array_values(array_unique(array_map('intval', $merged)));
+		}
+
+		$result = $sets[0];
+		for ($i = 1, $n = count($sets); $i < $n; $i++) {
+			$result = array_values(array_intersect($result, $sets[$i]));
+		}
+
+		return $result;
+	}
+
+	/**
 	 * Resolve matching post IDs from the index based on active filters.
 	 *
 	 * @param array<string, array{values: string[], logic: string}> $active_filters
 	 * @return int[]
 	 */
-	public function get_post_ids(array $active_filters): array {
+	public function get_post_ids(array $active_filters, string $between_filters_logic = 'AND'): array {
 		global $wpdb;
 		$table = Query_Filter_Indexer::table_name();
 
@@ -57,12 +86,6 @@ final class Query_Filter_Query_Engine {
 			return array_map('intval', $ids);
 		}
 
-		// Intersect across filters (AND between different filters).
-		$result = $sets[0];
-		for ($i = 1; $i < count($sets); $i++) {
-			$result = array_values(array_intersect($result, $sets[$i]));
-		}
-
-		return $result;
+		return self::combine_post_id_sets($sets, $between_filters_logic);
 	}
 }

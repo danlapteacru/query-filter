@@ -9,6 +9,10 @@ declare(strict_types=1);
  */
 
 $query_id_requested = (int) ( $attributes['queryId'] ?? 0 );
+$filters_relationship = strtoupper( (string) ( $attributes['filtersRelationship'] ?? 'AND' ) );
+if ( 'OR' !== $filters_relationship ) {
+	$filters_relationship = 'AND';
+}
 $page_id = get_the_ID() ?: 0;
 if ( $page_id <= 0 ) {
 	$queried = get_queried_object_id();
@@ -34,13 +38,15 @@ if ( $indexer instanceof Query_Filter_Indexer ) {
 wp_interactivity_state(
 	'query-filter',
 	[
-		'restUrl'   => rest_url( 'query-filter/v1/results' ),
-		'restNonce' => wp_create_nonce( 'wp_rest' ),
-		'queryId'   => $effective_query_id,
-		'pageId'    => $page_id,
-		'perPage'   => $per_page,
-		'total'     => $initial_total,
-		'pages'     => $initial_pages,
+		'restUrl'                    => rest_url( 'query-filter/v1/results' ),
+		'restNonce'                  => wp_create_nonce( 'wp_rest' ),
+		'queryId'                    => $effective_query_id,
+		'pageId'                     => $page_id,
+		'perPage'                    => $per_page,
+		'total'                      => $initial_total,
+		'pages'                      => $initial_pages,
+		'filtersRelationship'        => $filters_relationship,
+		'initialFiltersRelationship' => $filters_relationship,
 	]
 );
 

@@ -24,6 +24,11 @@
     "queryId": {
       "type": "number",
       "default": 0
+    },
+    "filtersRelationship": {
+      "type": "string",
+      "default": "AND",
+      "enum": ["AND", "OR"]
     }
   },
   "providesContext": {

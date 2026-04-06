@@ -1,8 +1,15 @@
 const URL_SEARCH = 'search';
 const URL_PAGE = 'pg';
+const URL_FILTERS_RELATIONSHIP = 'frel';
 
 // Extract and test URL helpers independently.
-function serializeFiltersToUrl( baseUrl, filters, search, page ) {
+function serializeFiltersToUrl(
+    baseUrl,
+    filters,
+    search,
+    page,
+    filtersRelationship = 'AND'
+) {
     const url = new URL( baseUrl );
     Object.entries( filters ).forEach( ( [ name, values ] ) => {
         if ( name === URL_SEARCH || name === URL_PAGE ) {
@@ -24,6 +31,10 @@ function serializeFiltersToUrl( baseUrl, filters, search, page ) {
     } else {
         url.searchParams.delete( URL_PAGE );
     }
+    url.searchParams.delete( URL_FILTERS_RELATIONSHIP );
+    if ( String( filtersRelationship ).toUpperCase() === 'OR' ) {
+        url.searchParams.set( URL_FILTERS_RELATIONSHIP, 'or' );
+    }
     return url.toString();
 }
 
@@ -32,6 +43,7 @@ function deserializeFiltersFromUrl( url ) {
     const filters = {};
     let search = '';
     let page = 1;
+    let filtersRelationship = 'AND';
 
     parsed.searchParams.forEach( ( value, key ) => {
         if ( key === URL_SEARCH ) {
@@ -42,6 +54,11 @@ function deserializeFiltersFromUrl( url ) {
             page = parseInt( value || '1', 10 );
             return;
         }
+        if ( key === URL_FILTERS_RELATIONSHIP ) {
+            filtersRelationship =
+                String( value ).toLowerCase() === 'or' ? 'OR' : 'AND';
+            return;
+        }
         filters[ key ] = value.split( ',' ).filter( Boolean );
     } );
 
@@ -49,7 +66,7 @@ function deserializeFiltersFromUrl( url ) {
         page = 1;
     }
 
-    return { filters, search, page };
+    return { filters, search, page, filtersRelationship };
 }
 
 describe( 'URL state serialization', () => {
@@ -84,6 +101,29 @@ describe( 'URL state serialization', () => {
         expect( result.filters ).toEqual( original );
         expect( result.search ).toBe( 'test' );
         expect( result.page ).toBe( 2 );
+        expect( result.filtersRelationship ).toBe( 'AND' );
+    } );
+
+    it( 'serializes frel=or when between-filter mode is OR', () => {
+        const url = serializeFiltersToUrl(
+            'https://example.com/shop',
+            { category: [ 'shoes' ] },
+            '',
+            1,
+            'OR'
+        );
+        expect( url ).toContain( 'frel=or' );
+    } );
+
+    it( 'round-trips filtersRelationship', () => {
+        const url = serializeFiltersToUrl(
+            'https://example.com/',
+            {},
+            '',
+            1,
+            'OR'
+        );
+        expect( deserializeFiltersFromUrl( url ).filtersRelationship ).toBe( 'OR' );
     } );
 
     it( 'omits page 1 from URL', () => {
