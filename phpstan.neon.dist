@@ -1,0 +1,22 @@
+includes:
+	- vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+	parallel:
+		maximumNumberOfProcesses: 1
+	level: 6
+	paths:
+		- includes
+		- query-filter.php
+	excludePaths:
+		- includes/class-cli.php
+	scanFiles:
+		- vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
+	ignoreErrors:
+		# Optional third-party integrations (guarded by class_exists / runtime checks).
+		-
+			message: '#^Function get_field not found\.$#'
+			path: includes/sources/class-source-acf.php
+		-
+			message: '#^Function wc_(get_product|attribute_taxonomy_name) not found\.$#'
+			path: includes/sources/class-source-woocommerce.php

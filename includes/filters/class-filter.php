@@ -21,7 +21,7 @@ abstract class Query_Filter_Filter {
 	 *
 	 * @return array<int, array{post_id: int, filter_name: string, filter_value: string, display_value: string, term_id: int, parent_id: int, depth: int}>
 	 */
-	abstract public function index_post(int $post_id): array;
+	abstract public function index_post( int $post_id ): array;
 
 	/**
 	 * Return available filter values with counts.
@@ -29,5 +29,5 @@ abstract class Query_Filter_Filter {
 	 * @param array{post_ids?: int[], logic?: string} $params
 	 * @return array<int, array{value: string, label: string, count: int}>
 	 */
-	abstract public function load_values(array $params): array;
+	abstract public function load_values( array $params ): array;
 }

@@ -14,8 +14,10 @@ This repository is the **Query Filter** WordPress plugin: block-based, index-bac
 |---------|---------|
 | `npm run build` | Compile blocks to `build/` |
 | `npm run start` | Watch mode |
-| `./vendor/bin/phpunit` | Unit tests |
+| `npm run lint` | ESLint + package.json lint |
 | `npm run test:unit` | Jest |
+| `composer test` | PHPUnit (unit) |
+| `composer check` | PHPStan + PHPCS |
 
 ## Conventions
 

@@ -45,8 +45,16 @@ The `build/` directory is produced by the build step and is not required in git 
 |---------|-------------|
 | `npm run build` | Production build of blocks → `build/` |
 | `npm run start` | Watch mode |
+| `npm run lint` | ESLint (`src/`, `tests/js/`) + `package.json` lint |
+| `npm run lint:js:fix` | ESLint with `--fix` |
 | `npm run test:unit` | Jest (`tests/js/`) |
-| `./vendor/bin/phpunit` | PHPUnit **unit** suite (`tests/phpunit/unit/`) |
+| `composer test` | PHPUnit **unit** suite (`tests/phpunit/unit/`) |
+| `composer phpstan` | PHPStan (`phpstan.neon.dist`, level 6) |
+| `composer lint:php` | PHPCS (WordPress-Core–based ruleset, `phpcs.xml.dist`) |
+| `composer lint:php:fix` | PHPCBF auto-fix |
+| `composer check` | PHPStan + PHPCS |
+
+**CI:** GitHub Actions (`.github/workflows/ci.yml`) runs the PHP and JavaScript jobs above on push and pull requests.
 
 **wp-env** (optional): `.wp-env.json` loads this folder as a plugin. Example:
 
