@@ -112,9 +112,9 @@ final class Query_Filter_Plugin {
 		$query_id = $block['attrs']['queryId'] ?? 0;
 		$processor = new \WP_HTML_Tag_Processor($content);
 		if ($processor->next_tag()) {
-			$processor->set_attribute('data-wp-interactive', 'query-filter');
+			// Target for client DOM updates only. Do not set data-wp-interactive here:
+			// replacing innerHTML would desync Preact hydration for nested blocks (e.g. pager).
 			$processor->set_attribute('data-query-filter-query', (string) $query_id);
-			$processor->set_attribute('data-wp-class--query-filter-loading', 'state.loading');
 		}
 		return (string) $processor;
 	}

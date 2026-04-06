@@ -7,7 +7,10 @@ store( 'query-filter', {
             const hasFilters = Object.values( state._filters || {} ).some(
                 ( v ) => v.length > 0
             );
-            return ! hasFilters && ! state.search;
+            const sortDirty =
+                typeof state.initialSortControlValue === 'string' &&
+                state.sortControlValue !== state.initialSortControlValue;
+            return ! hasFilters && ! state.search && ! sortDirty;
         },
     },
 } );

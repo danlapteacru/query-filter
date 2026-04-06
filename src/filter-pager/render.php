@@ -19,9 +19,9 @@ $context = [
         data-wp-on--click="actions.prevPage"
         data-wp-bind--disabled="state.isFirstPage"
     >&laquo; <?php esc_html_e( 'Prev', 'query-filter' ); ?></button>
-    <span data-wp-text="state.currentPage"></span>
+    <span data-wp-text="state.pagerCurrentNum"></span>
     /
-    <span data-wp-text="state.pages"></span>
+    <span data-wp-text="state.pagerPagesNum"></span>
     <button
         data-wp-on--click="actions.nextPage"
         data-wp-bind--disabled="state.isLastPage"

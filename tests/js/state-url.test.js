@@ -1,22 +1,28 @@
+const URL_SEARCH = 'search';
+const URL_PAGE = 'pg';
+
 // Extract and test URL helpers independently.
 function serializeFiltersToUrl( baseUrl, filters, search, page ) {
     const url = new URL( baseUrl );
     Object.entries( filters ).forEach( ( [ name, values ] ) => {
+        if ( name === URL_SEARCH || name === URL_PAGE ) {
+            return;
+        }
         if ( values.length > 0 ) {
-            url.searchParams.set( `qf_${ name }`, values.join( ',' ) );
+            url.searchParams.set( name, values.join( ',' ) );
         } else {
-            url.searchParams.delete( `qf_${ name }` );
+            url.searchParams.delete( name );
         }
     } );
     if ( search ) {
-        url.searchParams.set( 'qf_search', search );
+        url.searchParams.set( URL_SEARCH, search );
     } else {
-        url.searchParams.delete( 'qf_search' );
+        url.searchParams.delete( URL_SEARCH );
     }
     if ( page > 1 ) {
-        url.searchParams.set( 'qf_page', String( page ) );
+        url.searchParams.set( URL_PAGE, String( page ) );
     } else {
-        url.searchParams.delete( 'qf_page' );
+        url.searchParams.delete( URL_PAGE );
     }
     return url.toString();
 }
@@ -28,14 +34,20 @@ function deserializeFiltersFromUrl( url ) {
     let page = 1;
 
     parsed.searchParams.forEach( ( value, key ) => {
-        if ( key.startsWith( 'qf_' ) && key !== 'qf_search' && key !== 'qf_page' ) {
-            const filterName = key.slice( 3 );
-            filters[ filterName ] = value.split( ',' ).filter( Boolean );
+        if ( key === URL_SEARCH ) {
+            search = value;
+            return;
         }
+        if ( key === URL_PAGE ) {
+            page = parseInt( value || '1', 10 );
+            return;
+        }
+        filters[ key ] = value.split( ',' ).filter( Boolean );
     } );
 
-    search = parsed.searchParams.get( 'qf_search' ) || '';
-    page = parseInt( parsed.searchParams.get( 'qf_page' ) || '1', 10 );
+    if ( Number.isNaN( page ) || page < 1 ) {
+        page = 1;
+    }
 
     return { filters, search, page };
 }
@@ -48,10 +60,10 @@ describe( 'URL state serialization', () => {
             '',
             1
         );
-        expect( result ).toContain( 'qf_category=shoes%2Cboots' );
-        expect( result ).toContain( 'qf_color=red' );
-        expect( result ).not.toContain( 'qf_search' );
-        expect( result ).not.toContain( 'qf_page' );
+        expect( result ).toContain( 'category=shoes%2Cboots' );
+        expect( result ).toContain( 'color=red' );
+        expect( result ).not.toContain( 'search=' );
+        expect( result ).not.toContain( 'pg=' );
     } );
 
     it( 'serializes search and page', () => {
@@ -61,8 +73,8 @@ describe( 'URL state serialization', () => {
             'running',
             3
         );
-        expect( result ).toContain( 'qf_search=running' );
-        expect( result ).toContain( 'qf_page=3' );
+        expect( result ).toContain( 'search=running' );
+        expect( result ).toContain( 'pg=3' );
     } );
 
     it( 'round-trips filter state', () => {
@@ -76,6 +88,6 @@ describe( 'URL state serialization', () => {
 
     it( 'omits page 1 from URL', () => {
         const result = serializeFiltersToUrl( 'https://example.com/', {}, '', 1 );
-        expect( result ).not.toContain( 'qf_page' );
+        expect( result ).not.toContain( 'pg=' );
     } );
 } );
