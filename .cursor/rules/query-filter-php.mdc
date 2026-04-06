@@ -1,0 +1,12 @@
+---
+description: PHP standards for Query Filter includes and tests
+globs: includes/**/*.php
+alwaysApply: false
+---
+
+# PHP (Query Filter)
+
+- Start files with `declare(strict_types=1);` when adding new PHP.
+- Use `[]` for array literals; keep `Query_Filter_*` class naming and `final` where used elsewhere in the plugin.
+- REST and domain types: `Query_Filter_Request` owns JSON parsing — extend `from_array()` for new top-level fields; preserve backward compatibility for existing clients.
+- Query resolution: `Query_Filter_Query_Engine` — per-filter `logic` plus between-filter mode; avoid duplicating SQL outside the engine for filter ID sets.

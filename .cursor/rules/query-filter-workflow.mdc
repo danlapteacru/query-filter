@@ -1,0 +1,10 @@
+---
+description: Branches, verification, and docs layout for Query Filter
+alwaysApply: true
+---
+
+# Repo workflow (Query Filter)
+
+- Implement on a **feature branch**; avoid committing product changes only to `main` without a branch/PR.
+- Before claiming tests pass: `./vendor/bin/phpunit` and `npm run test:unit`; after `src/` edits, `npm run build`.
+- Design/specs: `docs/superpowers/specs/`; implementation plans: `docs/superpowers/plans/`.

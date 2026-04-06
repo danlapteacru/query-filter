@@ -1,0 +1,13 @@
+---
+description: Gutenberg blocks and Interactivity for Query Filter
+globs: src/**/*
+alwaysApply: false
+---
+
+# Blocks and Interactivity (Query Filter)
+
+- Source lives in `src/<block>/`; register in `index.js` from `block.json`. Run **`npm run build`** after changes.
+- **filter-container** is the parent of checkbox/search/sort/reset; provides `query-filter/queryId` context.
+- View scripts use `@wordpress/interactivity` store id **`query-filter`**. Align client payloads with `Query_Filter_Request` (e.g. structured `filters`, `filtersRelationship`).
+- DOM selectors for filter UI blocks must match generated classes: **`.wp-block-query-filter-filter-checkboxes`**, **`.wp-block-query-filter-filter-sort`** (derived from block names with `filter-` infix).
+- URL sync: use short keys **`search`**, **`pg`**, **`frel`**; do not reintroduce a `qf_` prefix for new params.
