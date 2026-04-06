@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  php:
+    name: PHP (tests, PHPStan, PHPCS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+          extensions: mysqli, xml
+          coverage: none
+          tools: composer:v2
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: PHPUnit (unit)
+        run: composer test
+
+      - name: PHPStan
+        run: composer phpstan
+
+      - name: PHPCS
+        run: composer lint:php
+
+  js:
+    name: JavaScript (lint, test, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: npm
+
+      - name: npm ci
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint:js
+
+      - name: package.json lint
+        run: npm run lint:pkg-json
+
+      - name: Jest
+        run: npm run test:unit
+
+      - name: Build blocks
+        run: npm run build

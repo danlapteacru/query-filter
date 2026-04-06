@@ -7,12 +7,12 @@ declare(strict_types=1);
  */
 final class Query_Filter_Filter_Checkboxes extends Query_Filter_Filter {
 
-	public function index_post(int $post_id): array {
-		$source_values = $this->source->get_values($post_id);
-		$rows = [];
+	public function index_post( int $post_id ): array {
+		$source_values = $this->source->get_values( $post_id );
+		$rows          = array();
 
-		foreach ($source_values as $val) {
-			$rows[] = [
+		foreach ( $source_values as $val ) {
+			$rows[] = array(
 				'post_id'       => $post_id,
 				'filter_name'   => $this->filter_name,
 				'filter_value'  => $val['value'],
@@ -20,23 +20,23 @@ final class Query_Filter_Filter_Checkboxes extends Query_Filter_Filter {
 				'term_id'       => $val['term_id'],
 				'parent_id'     => $val['parent_id'],
 				'depth'         => $val['depth'],
-			];
+			);
 		}
 
 		return $rows;
 	}
 
-	public function load_values(array $params): array {
+	public function load_values( array $params ): array {
 		global $wpdb;
 		$table = Query_Filter_Indexer::table_name();
 
 		$where = 'WHERE filter_name = %s';
-		$bind  = [$this->filter_name];
+		$bind  = array( $this->filter_name );
 
-		if (! empty($params['post_ids'])) {
-			$id_placeholders = implode(',', array_fill(0, count($params['post_ids']), '%d'));
-			$where .= " AND post_id IN ({$id_placeholders})";
-			$bind = array_merge($bind, $params['post_ids']);
+		if ( ! empty( $params['post_ids'] ) ) {
+			$id_placeholders = implode( ',', array_fill( 0, count( $params['post_ids'] ), '%d' ) );
+			$where          .= " AND post_id IN ({$id_placeholders})";
+			$bind            = array_merge( $bind, $params['post_ids'] );
 		}
 
 		$sql = $wpdb->prepare(
@@ -48,15 +48,18 @@ final class Query_Filter_Filter_Checkboxes extends Query_Filter_Filter {
 			$bind
 		);
 
-		$rows = $wpdb->get_results($sql, ARRAY_A);
-		if (! $rows) {
-			return [];
+		$rows = $wpdb->get_results( $sql, ARRAY_A );
+		if ( ! $rows ) {
+			return array();
 		}
 
-		return array_map(static fn(array $row): array => [
-			'value' => $row['value'],
-			'label' => $row['label'],
-			'count' => (int) $row['count'],
-		], $rows);
+		return array_map(
+			static fn( array $row ): array => array(
+				'value' => $row['value'],
+				'label' => $row['label'],
+				'count' => (int) $row['count'],
+			),
+			$rows
+		);
 	}
 }

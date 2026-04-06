@@ -10,24 +10,24 @@ final class Query_Filter_Query_Engine {
 	 * @param array<int, int[]> $sets Non-empty list of post ID lists.
 	 * @return int[]
 	 */
-	public static function combine_post_id_sets(array $sets, string $between_filters_logic): array {
-		if ($sets === []) {
-			return [];
+	public static function combine_post_id_sets( array $sets, string $between_filters_logic ): array {
+		if ( $sets === array() ) {
+			return array();
 		}
 
-		$rel = strtoupper($between_filters_logic);
-		if ($rel === 'OR') {
-			$merged = [];
-			foreach ($sets as $set) {
-				$merged = array_merge($merged, $set);
+		$rel = strtoupper( $between_filters_logic );
+		if ( $rel === 'OR' ) {
+			$merged = array();
+			foreach ( $sets as $set ) {
+				$merged = array_merge( $merged, $set );
 			}
 
-			return array_values(array_unique(array_map('intval', $merged)));
+			return array_values( array_unique( array_map( 'intval', $merged ) ) );
 		}
 
 		$result = $sets[0];
-		for ($i = 1, $n = count($sets); $i < $n; $i++) {
-			$result = array_values(array_intersect($result, $sets[$i]));
+		for ( $i = 1, $n = count( $sets ); $i < $n; $i++ ) {
+			$result = array_values( array_intersect( $result, $sets[ $i ] ) );
 		}
 
 		return $result;
@@ -39,35 +39,35 @@ final class Query_Filter_Query_Engine {
 	 * @param array<string, array{values: string[], logic: string}> $active_filters
 	 * @return int[]
 	 */
-	public function get_post_ids(array $active_filters, string $between_filters_logic = 'AND'): array {
+	public function get_post_ids( array $active_filters, string $between_filters_logic = 'AND' ): array {
 		global $wpdb;
 		$table = Query_Filter_Indexer::table_name();
 
-		if (empty($active_filters)) {
-			$ids = $wpdb->get_col("SELECT DISTINCT post_id FROM {$table}");
-			return array_map('intval', $ids);
+		if ( empty( $active_filters ) ) {
+			$ids = $wpdb->get_col( "SELECT DISTINCT post_id FROM {$table}" );
+			return array_map( 'intval', $ids );
 		}
 
-		$sets = [];
+		$sets = array();
 
-		foreach ($active_filters as $filter_name => $config) {
+		foreach ( $active_filters as $filter_name => $config ) {
 			$values = $config['values'];
-			$logic  = strtoupper($config['logic'] ?? 'OR');
+			$logic  = strtoupper( $config['logic'] );
 
-			if (empty($values)) {
+			if ( empty( $values ) ) {
 				continue;
 			}
 
-			$placeholders = implode(',', array_fill(0, count($values), '%s'));
-			$params = array_merge([$filter_name], $values);
+			$placeholders = implode( ',', array_fill( 0, count( $values ), '%s' ) );
+			$params       = array_merge( array( $filter_name ), $values );
 
-			if ($logic === 'AND') {
+			if ( $logic === 'AND' ) {
 				$sql = $wpdb->prepare(
 					"SELECT post_id FROM {$table}
 					 WHERE filter_name = %s AND filter_value IN ({$placeholders})
 					 GROUP BY post_id
 					 HAVING COUNT(DISTINCT filter_value) = %d",
-					array_merge($params, [count($values)])
+					array_merge( $params, array( count( $values ) ) )
 				);
 			} else {
 				$sql = $wpdb->prepare(
@@ -77,15 +77,15 @@ final class Query_Filter_Query_Engine {
 				);
 			}
 
-			$ids = $wpdb->get_col($sql);
-			$sets[] = array_map('intval', $ids);
+			$ids    = $wpdb->get_col( $sql );
+			$sets[] = array_map( 'intval', $ids );
 		}
 
-		if (empty($sets)) {
-			$ids = $wpdb->get_col("SELECT DISTINCT post_id FROM {$table}");
-			return array_map('intval', $ids);
+		if ( empty( $sets ) ) {
+			$ids = $wpdb->get_col( "SELECT DISTINCT post_id FROM {$table}" );
+			return array_map( 'intval', $ids );
 		}
 
-		return self::combine_post_id_sets($sets, $between_filters_logic);
+		return self::combine_post_id_sets( $sets, $between_filters_logic );
 	}
 }

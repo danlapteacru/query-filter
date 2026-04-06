@@ -52,7 +52,9 @@ description: >-
 
 ```bash
 npm run build
-./vendor/bin/phpunit
+npm run lint
+composer check
+composer test
 npm run test:unit
 ```
 

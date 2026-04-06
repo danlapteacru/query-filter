@@ -14,12 +14,12 @@
 
 declare(strict_types=1);
 
-if (! defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define('QUERY_FILTER_VERSION', '0.1.0');
-define('QUERY_FILTER_PLUGIN_FILE', __FILE__);
+define( 'QUERY_FILTER_VERSION', '0.1.0' );
+define( 'QUERY_FILTER_PLUGIN_FILE', __FILE__ );
 
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/includes/class-plugin.php';
