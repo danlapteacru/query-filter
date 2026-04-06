@@ -11,7 +11,7 @@ $show_counts = $attributes['showCounts'] ?? true;
 $logic       = $attributes['logic'] ?? 'OR';
 
 if ( empty( $filter_name ) ) {
-    return;
+    return '';
 }
 
 $indexer = Query_Filter_Plugin::instance()->get_indexer();

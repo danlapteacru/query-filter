@@ -22,6 +22,16 @@ final class Query_Filter_Rest_Controller {
 		}
 
 		$request = Query_Filter_Request::from_array($body);
+		$page_id = $request->page_id;
+		if ($page_id <= 0) {
+			$referer = $wp_request->get_header('referer');
+			if (is_string($referer) && $referer !== '') {
+				$from_ref = url_to_postid(esc_url_raw($referer));
+				if ($from_ref > 0) {
+					$page_id = $from_ref;
+				}
+			}
+		}
 		$plugin  = Query_Filter_Plugin::instance();
 		$indexer = $plugin->get_indexer();
 
@@ -59,7 +69,7 @@ final class Query_Filter_Rest_Controller {
 			post_ids:    $all_post_ids,
 			page:        $request->page,
 			query_id:    $request->query_id,
-			page_id:     $request->page_id,
+			page_id:     $page_id,
 			search_args: $search_args,
 			sort_args:   $sort_args,
 		);

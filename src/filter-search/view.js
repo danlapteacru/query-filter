@@ -1,6 +1,6 @@
 import { store } from '@wordpress/interactivity';
 
-let debounceTimer;
+let searchDebounceTimer;
 
 store( 'query-filter', {
     actions: {
@@ -8,11 +8,14 @@ store( 'query-filter', {
             const { state } = store( 'query-filter' );
             state.search = event.target.value;
 
-            clearTimeout( debounceTimer );
-            debounceTimer = setTimeout( () => {
+            clearTimeout( searchDebounceTimer );
+            searchDebounceTimer = setTimeout( () => {
                 state.currentPage = 1;
                 store( 'query-filter' ).actions.fetchResults();
             }, 300 );
+        },
+        clearSearchDebounce() {
+            clearTimeout( searchDebounceTimer );
         },
     },
 } );
