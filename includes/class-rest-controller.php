@@ -39,21 +39,29 @@ final class Query_Filter_Rest_Controller {
 			return new \WP_REST_Response(['error' => 'Indexer not configured'], 500);
 		}
 
-		// Build active filters with logic config.
+		// Build active filters with logic config (per-filter within-filter logic).
 		$active_filters = [];
-		foreach ($request->filters as $filter_name => $values) {
+		foreach ($request->filters as $filter_name => $config) {
 			$filter = $indexer->get_filter($filter_name);
-			if ($filter instanceof Query_Filter_Filter_Checkboxes) {
+			if (! $filter instanceof Query_Filter_Filter_Checkboxes) {
+				continue;
+			}
+			$values = $config['values'] ?? [];
+			$logic = strtoupper((string) ($config['logic'] ?? 'OR'));
+			if ($logic !== 'AND') {
+				$logic = 'OR';
+			}
+			if ($values !== []) {
 				$active_filters[$filter_name] = [
 					'values' => $values,
-					'logic'  => 'OR',
+					'logic'  => $logic,
 				];
 			}
 		}
 
 		// Resolve post IDs.
 		$engine = new Query_Filter_Query_Engine();
-		$all_post_ids = $engine->get_post_ids($active_filters);
+		$all_post_ids = $engine->get_post_ids($active_filters, $request->filters_relationship);
 
 		// Apply search filter.
 		$search_filter = new Query_Filter_Filter_Search();

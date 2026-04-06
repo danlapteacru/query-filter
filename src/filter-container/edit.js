@@ -1,9 +1,9 @@
 import { __ } from '@wordpress/i18n';
 import { useBlockProps, InspectorControls, InnerBlocks } from '@wordpress/block-editor';
-import { PanelBody, TextControl } from '@wordpress/components';
+import { PanelBody, TextControl, SelectControl } from '@wordpress/components';
 
 export default function Edit( { attributes, setAttributes } ) {
-    const { queryId } = attributes;
+    const { queryId, filtersRelationship } = attributes;
     const blockProps = useBlockProps();
 
     return (
@@ -16,6 +16,27 @@ export default function Edit( { attributes, setAttributes } ) {
                         type="number"
                         value={ queryId || '' }
                         onChange={ ( val ) => setAttributes( { queryId: parseInt( val, 10 ) || 0 } ) }
+                    />
+                    <SelectControl
+                        label={ __( 'Combine filters', 'query-filter' ) }
+                        help={ __(
+                            'How multiple checkbox filters work together: match all (AND) or match any (OR).',
+                            'query-filter'
+                        ) }
+                        value={ filtersRelationship === 'OR' ? 'OR' : 'AND' }
+                        options={ [
+                            {
+                                label: __( 'Match all filters (AND)', 'query-filter' ),
+                                value: 'AND',
+                            },
+                            {
+                                label: __( 'Match any filter (OR)', 'query-filter' ),
+                                value: 'OR',
+                            },
+                        ] }
+                        onChange={ ( val ) =>
+                            setAttributes( { filtersRelationship: val === 'OR' ? 'OR' : 'AND' } )
+                        }
                     />
                 </PanelBody>
             </InspectorControls>
