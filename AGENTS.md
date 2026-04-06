@@ -28,6 +28,7 @@ This repository is the **Query Filter** WordPress plugin: block-based, index-bac
 ## Workflow
 
 - Work on a **feature branch**; open a PR to `main`.
+- **Before push**, mirror CI (`.github/workflows/ci.yml`): `composer test`, `composer phpstan`, `composer lint:php`, `npm run lint:js`, `npm run lint:pkg-json`, `npm run test:unit`, `npm run build`.
 - After editing `src/`, run **`npm run build`** before verifying in WordPress.
 
 ## Deeper context

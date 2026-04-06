@@ -33,4 +33,8 @@
 	<rule ref="Generic.Arrays.DisallowShortArraySyntax">
 		<severity>0</severity>
 	</rule>
+	<!-- WPCS uses Universal sniff; project standard is short array syntax `[]`. -->
+	<rule ref="Universal.Arrays.DisallowShortArraySyntax">
+		<severity>0</severity>
+	</rule>
 </ruleset>
