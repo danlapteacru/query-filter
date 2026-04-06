@@ -47,6 +47,7 @@ description: >-
 - Sort block: **`.wp-block-query-filter-filter-sort`**.
 - Container pushes URL state: filter param names = filter keys; **`search`**, **`pg`**, **`frel`** (between-filter OR); avoid legacy `qf_` prefix.
 - Server injects initial state via `wp_interactivity_state( 'query-filter', … )` in `render.php` files.
+- **Hooks:** `query_filter/render/block`, `query_filter/render/checkboxes/context`, `query_filter/rest/response` — see README.
 
 ## Verification
 

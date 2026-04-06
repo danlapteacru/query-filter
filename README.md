@@ -92,6 +92,51 @@ Typical JSON fields:
 | `filtersRelationship` | `AND` or `OR` across checkbox filters |
 | `filters` | Per filter: legacy `name: ["slug", …]` or `name: { values, logic }` |
 
+## Hooks and customizing the front end
+
+The plugin exposes **WordPress filters** so themes and companion plugins can change **markup** and **REST payloads** without editing plugin files. Design notes: [`docs/superpowers/specs/2026-04-07-query-filter-hooks-design.md`](docs/superpowers/specs/2026-04-07-query-filter-hooks-design.md).
+
+### Supported filters
+
+| Hook | When it runs | Arguments |
+|------|----------------|-----------|
+| **`query_filter/render/block`** | After each filter block’s `render.php` template has printed | `$html` (string), `$block_name` (string), `$attributes` (array), `$context` (array\|null) |
+| **`query_filter/render/checkboxes/context`** | Before `data-wp-context` is JSON-encoded for **Filter: Checkboxes** | `$context` (array), `$attributes` (array) — **must return an array** (or the original is kept) |
+| **`query_filter/rest/response`** | Before the REST response is sent for `POST …/query-filter/v1/results` | `$data` with keys `results_html`, `filters`, `total`, `pages` — **must return an array** |
+
+**Block names** for `query_filter/render/block` match block registration, e.g. `query-filter/filter-checkboxes`, `query-filter/filter-container`, `query-filter/filter-search`, `query-filter/filter-sort`, `query-filter/filter-reset`, `query-filter/filter-pager`.
+
+### Example: wrap checkbox markup (PHP)
+
+```php
+add_filter( 'query_filter/render/block', function ( $html, $block_name, $attributes, $context ) {
+	if ( 'query-filter/filter-checkboxes' !== $block_name ) {
+		return $html;
+	}
+	return '<div class="my-theme-filter-card">' . $html . '</div>';
+}, 10, 4 );
+```
+
+Keep **`data-wp-interactive`**, **`data-wp-context`**, and **`data-wp-on--*`** intact unless you replace the Interactivity behavior as well.
+
+### Example: checkbox context (PHP)
+
+Use only to adjust **presentation-related** context (e.g. trimming labels). Changing `filterName` or `logic` can desync the client store.
+
+```php
+add_filter( 'query_filter/render/checkboxes/context', function ( $context, $attributes ) {
+	return $context; // return modified array
+}, 10, 2 );
+```
+
+### Without plugin hooks (core WordPress)
+
+You can use **`render_block`** and check `$block['blockName']` for `query-filter/*`. Same warning: do not strip Interactivity attributes unless you know the impact.
+
+### CSS-only (no PHP)
+
+Use block classes (e.g. `.wp-block-query-filter-filter-checkboxes`) and **theme.json** / **Additional CSS** for layout and branding.
+
 ## Project layout
 
 ```
@@ -103,6 +148,7 @@ includes/                 # PHP (classmap autoload)
   class-rest-controller.php
   class-request.php       # REST JSON → request DTO
   class-renderer.php      # Renders Query Loop for IDs
+  class-render-hooks.php  # apply_filters helpers for block HTML + REST
   filters/                # Filter types
   sources/                # Data sources (taxonomy, meta, …)
 src/                      # Block source (JS + render.php)

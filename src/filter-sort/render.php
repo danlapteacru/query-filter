@@ -30,21 +30,29 @@ wp_interactivity_state(
 	]
 );
 
+ob_start();
 ?>
 <div
 	<?php echo get_block_wrapper_attributes(); ?>
 	data-wp-interactive="query-filter"
 	data-default-sort="<?php echo esc_attr( $default_sort ); ?>"
 >
-    <label class="wp-block-query-filter__label"><?php echo esc_html( $label ); ?></label>
-    <select
+	<label class="wp-block-query-filter__label"><?php echo esc_html( $label ); ?></label>
+	<select
 		data-wp-bind--value="state.sortControlValue"
 		data-wp-on--change="actions.onSortChange"
 	>
-        <?php foreach ( $options as $opt ) : ?>
-            <option value="<?php echo esc_attr( $opt['orderby'] . ':' . $opt['order'] ); ?>">
-                <?php echo esc_html( $opt['label'] ); ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
+		<?php foreach ( $options as $opt ) : ?>
+			<option value="<?php echo esc_attr( $opt['orderby'] . ':' . $opt['order'] ); ?>">
+				<?php echo esc_html( $opt['label'] ); ?>
+			</option>
+		<?php endforeach; ?>
+	</select>
 </div>
+<?php
+echo Query_Filter_Render_Hooks::block_html(
+	ob_get_clean(),
+	Query_Filter_Render_Hooks::BLOCK_FILTER_SORT,
+	$attributes,
+	null
+);
