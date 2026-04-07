@@ -97,7 +97,9 @@ Typical JSON fields:
 
 ### Numeric and date facets (PHP)
 
-Taxonomy filters are registered automatically. For **meta price**, **published date**, etc., register filters on the indexer:
+Taxonomy filters are registered automatically. **Published date** for the date-range block is registered by default as **`post_date`** (`Query_Filter_Source_Post_Date`). Use **Filter name `post_date`** in the block (the default), then run **Tools → Query Filter → Rebuild Full Index** once so existing posts get rows (new/edited posts index automatically).
+
+For **meta price** or an **extra** date source (e.g. meta field), register on the indexer:
 
 ```php
 add_action(
@@ -109,17 +111,11 @@ add_action(
 				new Query_Filter_Source_Post_Meta( 'price' )
 			)
 		);
-		$indexer->register_filter(
-			new Query_Filter_Filter_Date_Range(
-				'published',
-				new Query_Filter_Source_Post_Date()
-			)
-		);
 	}
 );
 ```
 
-Use the **same filter name** in the block settings (`filterName`) as in `register_filter()`.
+Use the **same filter name** in the block (`filterName`) as in `register_filter()`. Registering another `Query_Filter_Filter_Date_Range` with the name **`post_date`** replaces the default.
 
 ## Hooks and customizing the front end
 

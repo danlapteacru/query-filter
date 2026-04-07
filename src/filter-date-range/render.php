@@ -25,7 +25,7 @@ if ( ! $is_registered && current_user_can( 'manage_options' ) ) {
 	printf(
 		/* translators: %s: filter name from block attributes */
 		esc_html__(
-			'Date range filter "%s" is not registered on the indexer. Register Query_Filter_Filter_Date_Range in PHP (action query_filter/indexer/register_filters) — see README.',
+			'Date range filter "%s" is not registered on the indexer. Use the default name post_date, or register Query_Filter_Filter_Date_Range in PHP (see README). After adding or changing filters, run a full index rebuild.',
 			'query-filter'
 		),
 		esc_html( $filter_name )
@@ -56,7 +56,7 @@ ob_start();
 			<input
 				type="date"
 				data-query-filter-date="after"
-				data-wp-on--input="actions.setDatePart"
+				data-wp-on--change="actions.setDatePart"
 			/>
 		</label>
 		<label class="wp-block-query-filter-date-range__field">
@@ -64,7 +64,7 @@ ob_start();
 			<input
 				type="date"
 				data-query-filter-date="before"
-				data-wp-on--input="actions.setDatePart"
+				data-wp-on--change="actions.setDatePart"
 			/>
 		</label>
 	</div>
