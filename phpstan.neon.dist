@@ -20,3 +20,7 @@ parameters:
 		-
 			message: '#^Function wc_(get_product|attribute_taxonomy_name) not found\.$#'
 			path: includes/sources/class-source-woocommerce.php
+		# Rebuild flag is cleared inside run_single_rebuild_batch(); PHPStan cannot model option mutations.
+		-
+			identifier: booleanNot.alwaysFalse
+			path: includes/class-admin.php

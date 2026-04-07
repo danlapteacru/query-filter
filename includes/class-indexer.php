@@ -101,14 +101,27 @@ final class Query_Filter_Indexer {
 	}
 
 	public static function schedule_full_rebuild(): void {
+		wp_clear_scheduled_hook( self::CRON_HOOK );
 		update_option( 'query_filter_rebuild_offset', 0 );
-		if ( ! wp_next_scheduled( self::CRON_HOOK ) ) {
-			wp_schedule_single_event( time(), self::CRON_HOOK );
-		}
+		wp_schedule_single_event( time(), self::CRON_HOOK );
 	}
 
-	public function run_cron_batch(): void {
-		$offset = (int) get_option( 'query_filter_rebuild_offset', 0 );
+	public static function rebuild_is_in_progress(): bool {
+		return false !== get_option( 'query_filter_rebuild_offset', false );
+	}
+
+	/**
+	 * Process one batch of a scheduled full rebuild.
+	 *
+	 * @return bool True if more published posts remain to index.
+	 */
+	public function run_single_rebuild_batch(): bool {
+		$raw_offset = get_option( 'query_filter_rebuild_offset', false );
+		if ( $raw_offset === false ) {
+			return false;
+		}
+
+		$offset = (int) $raw_offset;
 
 		$post_ids = get_posts(
 			array(
@@ -128,10 +141,26 @@ final class Query_Filter_Indexer {
 
 		if ( count( $post_ids ) >= self::BATCH_SIZE ) {
 			update_option( 'query_filter_rebuild_offset', $offset + self::BATCH_SIZE );
+			return true;
+		}
+
+		delete_option( 'query_filter_rebuild_offset' );
+		update_option( 'query_filter_last_indexed', time() );
+
+		return false;
+	}
+
+	/**
+	 * WP-Cron callback: one batch, then re-schedule if needed.
+	 */
+	public function run_cron_batch(): void {
+		if ( ! self::rebuild_is_in_progress() ) {
+			return;
+		}
+
+		$more = $this->run_single_rebuild_batch();
+		if ( $more ) {
 			wp_schedule_single_event( time() + 5, self::CRON_HOOK );
-		} else {
-			delete_option( 'query_filter_rebuild_offset' );
-			update_option( 'query_filter_last_indexed', time() );
 		}
 	}
 

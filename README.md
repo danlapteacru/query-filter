@@ -17,7 +17,7 @@ WordPress plugin that adds **index-backed filtering** for **Query Loop** blocks.
   - **Filter: Search**, **Sort**, **Reset** — live inside the container.
   - **Filter: Pager** — intended inside the Query Loop (pagination).
 - **REST API:** `POST /wp-json/query-filter/v1/results` — JSON body parsed by `Query_Filter_Request` (filters, optional `filtersRelationship`, sort, search, page, etc.).
-- **Admin:** **Tools → Query Filter** — index stats, schedule full rebuild, clear index.
+- **Admin:** **Tools → Query Filter** — index stats, schedule full rebuild, clear index. If **Rebuilding…** never finishes (common on localhost when WP-Cron does not run), **refresh that page**; the plugin runs rebuild batches during the request. Filters: `query_filter/admin/run_rebuild_batches_on_tools_page`, `query_filter/admin/rebuild_time_budget_seconds` (default 20), `query_filter/admin/rebuild_max_batches_per_request` (default 500).
 - **WP-CLI:** `wp query-filter index` — `rebuild`, `post <id>`, `status` (when WP-CLI is available).
 
 Out of the box, the plugin registers a **checkbox filter for each public taxonomy** and indexes published posts.

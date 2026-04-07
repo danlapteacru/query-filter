@@ -29,6 +29,9 @@
 | Hook | Args | Notes |
 |------|------|--------|
 | `query_filter/indexer/register_filters` | `Query_Filter_Indexer $indexer` | Register `Query_Filter_Filter_Range`, `Query_Filter_Filter_Date_Range`, or other custom filters. |
+| `query_filter/admin/run_rebuild_batches_on_tools_page` | `bool $run` | Default `true`: while a cron rebuild is pending, run batches during **Tools → Query Filter** load (for hosts without WP-Cron). |
+| `query_filter/admin/rebuild_time_budget_seconds` | `float $seconds` | Default `20` — max wall time per admin request for those batches. |
+| `query_filter/admin/rebuild_max_batches_per_request` | `int $max` | Default `500` — safety cap on batches per request. |
 
 ---
 

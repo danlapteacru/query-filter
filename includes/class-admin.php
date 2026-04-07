@@ -12,6 +12,75 @@ final class Query_Filter_Admin {
 			'query-filter',
 			array( self::class, 'render_page' )
 		);
+		add_action( 'load-tools_page_query-filter', array( self::class, 'process_rebuild_batches_without_cron' ) );
+	}
+
+	/**
+	 * WP-Cron often does not run on local sites (no traffic, DISABLE_WP_CRON, etc.).
+	 * While a rebuild is pending, run several batches during this admin screen load
+	 * so the index can finish without a system cron.
+	 */
+	public static function process_rebuild_batches_without_cron(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		if ( ! Query_Filter_Indexer::rebuild_is_in_progress() ) {
+			return;
+		}
+
+		/**
+		 * Whether to advance the rebuild when loading Tools → Query Filter.
+		 *
+		 * @param bool $run Default true.
+		 */
+		if ( ! apply_filters( 'query_filter/admin/run_rebuild_batches_on_tools_page', true ) ) {
+			return;
+		}
+
+		$indexer = Query_Filter_Plugin::instance()->get_indexer();
+		if ( ! $indexer instanceof Query_Filter_Indexer ) {
+			return;
+		}
+
+		/**
+		 * Max seconds to spend on rebuild batches per admin request.
+		 *
+		 * @param float $seconds Default 20.
+		 */
+		$budget = (float) apply_filters( 'query_filter/admin/rebuild_time_budget_seconds', 20.0 );
+		if ( $budget < 1.0 ) {
+			$budget = 1.0;
+		}
+
+		/**
+		 * Safety cap on batches per request (each batch is {@see Query_Filter_Indexer::BATCH_SIZE} posts).
+		 *
+		 * @param int $max Default 500.
+		 */
+		$max_batches = (int) apply_filters( 'query_filter/admin/rebuild_max_batches_per_request', 500 );
+		if ( $max_batches < 1 ) {
+			$max_batches = 1;
+		}
+
+		$start   = microtime( true );
+		$batch_n = 0;
+
+		while ( ( microtime( true ) - $start ) < $budget && $batch_n < $max_batches ) {
+			if ( ! Query_Filter_Indexer::rebuild_is_in_progress() ) {
+				break;
+			}
+			$more = $indexer->run_single_rebuild_batch();
+			++$batch_n;
+			if ( ! $more ) {
+				break;
+			}
+		}
+
+		// Option may have been deleted by run_single_rebuild_batch(); PHPStan cannot see that.
+		if ( ! Query_Filter_Indexer::rebuild_is_in_progress() ) {
+			wp_clear_scheduled_hook( Query_Filter_Indexer::CRON_HOOK );
+		}
 	}
 
 	public static function render_page(): void {
@@ -29,6 +98,8 @@ final class Query_Filter_Admin {
 				global $wpdb;
 				$wpdb->query( 'TRUNCATE TABLE ' . Query_Filter_Indexer::table_name() );
 				delete_option( 'query_filter_last_indexed' );
+				delete_option( 'query_filter_rebuild_offset' );
+				wp_clear_scheduled_hook( Query_Filter_Indexer::CRON_HOOK );
 				echo '<div class="notice notice-success"><p>' . esc_html__( 'Index cleared.', 'query-filter' ) . '</p></div>';
 			}
 		}
@@ -38,7 +109,7 @@ final class Query_Filter_Admin {
 		$indexed_posts       = (int) $wpdb->get_var( "SELECT COUNT(DISTINCT post_id) FROM {$table}" );
 		$total_rows          = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
 		$last_indexed        = get_option( 'query_filter_last_indexed' );
-		$rebuild_in_progress = get_option( 'query_filter_rebuild_offset' ) !== false;
+		$rebuild_in_progress = Query_Filter_Indexer::rebuild_is_in_progress();
 
 		?>
 		<div class="wrap">
@@ -75,6 +146,16 @@ final class Query_Filter_Admin {
 					</strong></td>
 				</tr>
 			</table>
+			<?php if ( $rebuild_in_progress ) : ?>
+				<p class="description" style="max-width: 640px;">
+					<?php
+					esc_html_e(
+						'Rebuilds normally continue via WP-Cron (triggered by site visits). On local environments without cron, batches also run when you open or refresh this screen — reload until the status shows Up to date, or use WP-CLI: wp query-filter index rebuild.',
+						'query-filter'
+					);
+					?>
+				</p>
+			<?php endif; ?>
 
 			<h2><?php esc_html_e( 'Actions', 'query-filter' ); ?></h2>
 			<form method="post">
