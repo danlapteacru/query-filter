@@ -86,28 +86,6 @@ final class Query_Filter_Query_Engine {
 
 				$ids    = $wpdb->get_col( $sql );
 				$sets[] = array_map( 'intval', $ids );
-				continue;
-			}
-
-			if ( $kind === 'range' ) {
-				$min = isset( $config['min'] ) ? (string) $config['min'] : '';
-				$max = isset( $config['max'] ) ? (string) $config['max'] : '';
-				$ids = Query_Filter_Filter_Range::get_matching_post_ids( $filter_name, $min, $max );
-				if ( $ids === null ) {
-					continue;
-				}
-				$sets[] = $ids;
-				continue;
-			}
-
-			if ( $kind === 'date_range' ) {
-				$after  = isset( $config['after'] ) ? (string) $config['after'] : '';
-				$before = isset( $config['before'] ) ? (string) $config['before'] : '';
-				$ids    = Query_Filter_Filter_Date_Range::get_matching_post_ids( $filter_name, $after, $before );
-				if ( $ids === null ) {
-					continue;
-				}
-				$sets[] = $ids;
 			}
 		}
 

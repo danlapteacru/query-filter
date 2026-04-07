@@ -67,30 +67,6 @@ final class Query_Filter_Rest_Controller {
 						'logic'  => $logic,
 					];
 				}
-				continue;
-			}
-			if ( $kind === 'range' && $filter instanceof Query_Filter_Filter_Range ) {
-				$min = isset( $config['min'] ) ? (string) $config['min'] : '';
-				$max = isset( $config['max'] ) ? (string) $config['max'] : '';
-				if ( $min !== '' || $max !== '' ) {
-					$active_filters[ $filter_name ] = [
-						'kind' => 'range',
-						'min'  => $min,
-						'max'  => $max,
-					];
-				}
-				continue;
-			}
-			if ( $kind === 'date_range' && $filter instanceof Query_Filter_Filter_Date_Range ) {
-				$after  = isset( $config['after'] ) ? (string) $config['after'] : '';
-				$before = isset( $config['before'] ) ? (string) $config['before'] : '';
-				if ( $after !== '' || $before !== '' ) {
-					$active_filters[ $filter_name ] = [
-						'kind'   => 'date_range',
-						'after'  => $after,
-						'before' => $before,
-					];
-				}
 			}
 		}
 
@@ -126,14 +102,6 @@ final class Query_Filter_Rest_Controller {
 						'post_ids' => $all_post_ids,
 					]
 				);
-				continue;
-			}
-			if ( $filter instanceof Query_Filter_Filter_Range ) {
-				$filter_states[ $name ] = $filter->load_bounds( $all_post_ids );
-				continue;
-			}
-			if ( $filter instanceof Query_Filter_Filter_Date_Range ) {
-				$filter_states[ $name ] = $filter->load_bounds( $all_post_ids );
 			}
 		}
 

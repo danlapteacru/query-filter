@@ -5,7 +5,7 @@ This repository is the **Query Filter** WordPress plugin: block-based, index-bac
 ## Quick map
 
 - **PHP**: `includes/` (`class-plugin.php`, `class-rest-controller.php`, `class-request.php`, `class-query-engine.php`, `class-renderer.php`, `class-indexer.php`, `filters/`, `sources/`).
-- **Blocks**: `src/<block>/` → **`npm run build`** → `build/` (ignored by git). Registration uses **`Query_Filter_Blocks::get_build_directories()`** (filter **`query_filter/blocks/build_directories`**). Facet blocks: checkboxes, radio, dropdown (discrete); number range, date range (need **`query_filter/indexer/register_filters`**). Render hooks use **`$block->name`**; see README.
+- **Blocks**: `src/<block>/` → **`npm run build`** → `build/` (ignored by git). Registration uses **`Query_Filter_Blocks::get_build_directories()`** (filter **`query_filter/blocks/build_directories`**). Facet blocks: checkboxes, radio, dropdown (discrete). Extra facets via **`query_filter/indexer/register_filters`**. Render hooks use **`$block->name`**; see README.
 - **Tests**: `tests/phpunit/unit/` (default PHPUnit), `tests/phpunit/integration/` (needs WordPress test lib), `tests/js/` (Jest).
 
 ## Commands
@@ -22,8 +22,8 @@ This repository is the **Query Filter** WordPress plugin: block-based, index-bac
 ## Conventions
 
 - PHP: **`declare(strict_types=1);`**, prefer **`[]`** over `array()`, match existing `Query_Filter_*` naming.
-- REST body: see `Query_Filter_Request` — **`filters`** may be discrete (`values` + `logic`), numeric range (`min` / `max`), or date range (`after` / `before`); optional **`filtersRelationship`**; legacy flat arrays still supported.
-- Front-end: single store **`query-filter`**; discrete facets share sync via **`.wp-block-query-filter-filter-checkboxes`**, **`-radio`**, **`-dropdown`**; sort **`-filter-sort`**. Range facets use **`__queryFilterKind`** objects in `state._filters`.
+- REST body: see `Query_Filter_Request` — **`filters`** are discrete (`values` + `logic`); optional **`filtersRelationship`**; legacy flat arrays still supported.
+- Front-end: single store **`query-filter`**; discrete facets share sync via **`.wp-block-query-filter-filter-checkboxes`**, **`-radio`**, **`-dropdown`**; sort **`-filter-sort`**.
 
 ## Workflow
 

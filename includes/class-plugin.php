@@ -62,17 +62,8 @@ final class Query_Filter_Plugin {
 			$this->indexer->register_filter( new Query_Filter_Filter_Checkboxes( $taxonomy, $source ) );
 		}
 
-		// Published date (Y-m-d) for the default "Filter: Date range" block (filterName post_date).
-		$this->indexer->register_filter(
-			new Query_Filter_Filter_Date_Range(
-				'post_date',
-				new Query_Filter_Source_Post_Date()
-			)
-		);
-
 		/**
-		 * Register numeric range / extra date sources / custom filters. Can replace `post_date` by
-		 * registering another {@see Query_Filter_Filter_Date_Range} with the same name.
+		 * Register extra discrete filters (e.g. post meta checkboxes) or replace defaults.
 		 *
 		 * @param Query_Filter_Indexer $indexer
 		 */

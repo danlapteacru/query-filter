@@ -4,8 +4,6 @@ const PAGER_SELECTOR = ".wp-block-query-filter-filter-pager";
 const CHECKBOXES_BLOCK_SELECTOR = ".wp-block-query-filter-filter-checkboxes";
 /** Checkboxes, radio, and dropdown share discrete `string[]` store values. */
 const DISCRETE_FILTER_SELECTOR = `${CHECKBOXES_BLOCK_SELECTOR}, .wp-block-query-filter-filter-radio, .wp-block-query-filter-filter-dropdown`;
-const RANGE_FILTER_SELECTOR = ".wp-block-query-filter-filter-range";
-const DATE_RANGE_FILTER_SELECTOR = ".wp-block-query-filter-filter-date-range";
 const SORT_BLOCK_SELECTOR = ".wp-block-query-filter-filter-sort";
 
 const URL_SEARCH = "search";
@@ -89,66 +87,8 @@ function syncDiscreteFilterDomFromStore() {
     });
 }
 
-function syncRangeDomFromStore() {
-    const { state } = store("query-filter");
-    const filters = state._filters || {};
-    document.querySelectorAll(RANGE_FILTER_SELECTOR).forEach((block) => {
-        const name = readFilterNameFromBlock(block);
-        if (!name) {
-            return;
-        }
-        const v = filters[name];
-        const payload =
-            v && typeof v === "object" && v.__queryFilterKind === "range"
-                ? v
-                : { min: "", max: "" };
-        block.querySelectorAll("[data-query-filter-range]").forEach((el) => {
-            if (!(el instanceof HTMLInputElement)) {
-                return;
-            }
-            const part = el.getAttribute("data-query-filter-range");
-            if (part === "min") {
-                el.value = typeof payload.min === "string" ? payload.min : "";
-            } else if (part === "max") {
-                el.value = typeof payload.max === "string" ? payload.max : "";
-            }
-        });
-    });
-}
-
-function syncDateRangeDomFromStore() {
-    const { state } = store("query-filter");
-    const filters = state._filters || {};
-    document.querySelectorAll(DATE_RANGE_FILTER_SELECTOR).forEach((block) => {
-        const name = readFilterNameFromBlock(block);
-        if (!name) {
-            return;
-        }
-        const v = filters[name];
-        const payload =
-            v && typeof v === "object" && v.__queryFilterKind === "dateRange"
-                ? v
-                : { after: "", before: "" };
-        block.querySelectorAll("[data-query-filter-date]").forEach((el) => {
-            if (!(el instanceof HTMLInputElement)) {
-                return;
-            }
-            const part = el.getAttribute("data-query-filter-date");
-            if (part === "after") {
-                el.value =
-                    typeof payload.after === "string" ? payload.after : "";
-            } else if (part === "before") {
-                el.value =
-                    typeof payload.before === "string" ? payload.before : "";
-            }
-        });
-    });
-}
-
 function syncAllFilterDomFromStore() {
     syncDiscreteFilterDomFromStore();
-    syncRangeDomFromStore();
-    syncDateRangeDomFromStore();
 }
 
 /**
@@ -193,24 +133,6 @@ function filtersPayloadFromStore() {
             }
             const logic = logicByName[key] || "OR";
             out[key] = { values, logic };
-            continue;
-        }
-        if (v && typeof v === "object" && v.__queryFilterKind === "range") {
-            const min = typeof v.min === "string" ? v.min : "";
-            const max = typeof v.max === "string" ? v.max : "";
-            if (min === "" && max === "") {
-                continue;
-            }
-            out[key] = { min, max };
-            continue;
-        }
-        if (v && typeof v === "object" && v.__queryFilterKind === "dateRange") {
-            const after = typeof v.after === "string" ? v.after : "";
-            const before = typeof v.before === "string" ? v.before : "";
-            if (after === "" && before === "") {
-                continue;
-            }
-            out[key] = { after, before };
         }
     }
     return out;
@@ -233,40 +155,8 @@ function collectDiscreteFilterUrlKeys() {
 /**
  * @return {Set<string>}
  */
-function collectRangeFilterUrlKeys() {
-    const names = new Set();
-    document.querySelectorAll(RANGE_FILTER_SELECTOR).forEach((block) => {
-        const n = readFilterNameFromBlock(block);
-        if (n) {
-            names.add(n);
-        }
-    });
-    return names;
-}
-
-/**
- * @return {Set<string>}
- */
-function collectDateRangeFilterUrlKeys() {
-    const names = new Set();
-    document.querySelectorAll(DATE_RANGE_FILTER_SELECTOR).forEach((block) => {
-        const n = readFilterNameFromBlock(block);
-        if (n) {
-            names.add(n);
-        }
-    });
-    return names;
-}
-
-/**
- * @return {Set<string>}
- */
 function collectAllFilterUrlKeys() {
-    const s = new Set();
-    collectDiscreteFilterUrlKeys().forEach((k) => s.add(k));
-    collectRangeFilterUrlKeys().forEach((k) => s.add(k));
-    collectDateRangeFilterUrlKeys().forEach((k) => s.add(k));
-    return s;
+    return collectDiscreteFilterUrlKeys();
 }
 
 /**
@@ -300,26 +190,6 @@ function pushFilterStateToUrl(stripEntireQuery = false) {
         const values = filters[name];
         if (Array.isArray(values) && values.length > 0) {
             url.searchParams.set(name, values.join(","));
-        } else if (
-            values &&
-            typeof values === "object" &&
-            values.__queryFilterKind === "range"
-        ) {
-            const min = typeof values.min === "string" ? values.min : "";
-            const max = typeof values.max === "string" ? values.max : "";
-            if (min !== "" || max !== "") {
-                url.searchParams.set(name, `${min}..${max}`);
-            }
-        } else if (
-            values &&
-            typeof values === "object" &&
-            values.__queryFilterKind === "dateRange"
-        ) {
-            const a = typeof values.after === "string" ? values.after : "";
-            const b = typeof values.before === "string" ? values.before : "";
-            if (a !== "" || b !== "") {
-                url.searchParams.set(name, `${a}..${b}`);
-            }
         }
     }
     if (state.search) {
@@ -533,36 +403,6 @@ function hydrateFiltersFromUrl() {
             return;
         }
         next[name] = raw.split(",").filter(Boolean);
-    });
-
-    collectRangeFilterUrlKeys().forEach((name) => {
-        const raw = url.searchParams.get(name);
-        if (raw === null || raw === "") {
-            return;
-        }
-        const idx = raw.indexOf("..");
-        const min = idx === -1 ? raw : raw.slice(0, idx);
-        const max = idx === -1 ? "" : raw.slice(idx + 2);
-        next[name] = {
-            __queryFilterKind: "range",
-            min,
-            max,
-        };
-    });
-
-    collectDateRangeFilterUrlKeys().forEach((name) => {
-        const raw = url.searchParams.get(name);
-        if (raw === null || raw === "") {
-            return;
-        }
-        const idx = raw.indexOf("..");
-        const after = idx === -1 ? raw : raw.slice(0, idx);
-        const before = idx === -1 ? "" : raw.slice(idx + 2);
-        next[name] = {
-            __queryFilterKind: "dateRange",
-            after,
-            before,
-        };
     });
 
     s._filters = next;

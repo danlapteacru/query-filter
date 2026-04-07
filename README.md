@@ -12,8 +12,6 @@ WordPress plugin that adds **index-backed filtering** for **Query Loop** blocks.
   - **Filter container** — wraps child filters, links to a Query Loop via `queryId`; **Combine filters** (AND/OR across filters).
   - **Filter: Checkboxes** — multi-select; taxonomy-backed options; **Match** any or all values within that filter.
   - **Filter: Radio** / **Filter: Dropdown** — single choice; same indexed values as checkboxes (taxonomy terms, etc.).
-  - **Filter: Number range** — min/max inputs and optional dual range sliders; requires a registered **`Query_Filter_Filter_Range`** (see hooks below).
-  - **Filter: Date range** — `after` / `before` (`Y-m-d`); requires **`Query_Filter_Filter_Date_Range`**.
   - **Filter: Search**, **Sort**, **Reset** — live inside the container.
   - **Filter: Pager** — intended inside the Query Loop (pagination).
 - **REST API:** `POST /wp-json/query-filter/v1/results` — JSON body parsed by `Query_Filter_Request` (filters, optional `filtersRelationship`, sort, search, page, etc.).
@@ -93,29 +91,27 @@ Typical JSON fields:
 | `queryId`, `pageId` | Target Query Loop and page context |
 | `page`, `orderby`, `order`, `search` | Pagination and query refinement |
 | `filtersRelationship` | `AND` or `OR` across filters |
-| `filters` | Discrete: `name: ["slug", …]` or `name: { values, logic }`. Numeric range: `name: { min, max }`. Date range: `name: { after, before }` (ISO `Y-m-d`). |
+| `filters` | Discrete only: `name: ["slug", …]` or `name: { values, logic }`. |
 
-### Numeric and date facets (PHP)
+### Extra discrete filters (PHP)
 
-Taxonomy filters are registered automatically. **Published date** for the date-range block is registered by default as **`post_date`** (`Query_Filter_Source_Post_Date`). Use **Filter name `post_date`** in the block (the default), then run **Tools → Query Filter → Rebuild Full Index** once so existing posts get rows (new/edited posts index automatically).
-
-For **meta price** or an **extra** date source (e.g. meta field), register on the indexer:
+Taxonomy filters are registered automatically. Register additional **`Query_Filter_Filter_Checkboxes`** filters (e.g. post meta) on the indexer:
 
 ```php
 add_action(
 	'query_filter/indexer/register_filters',
 	static function ( Query_Filter_Indexer $indexer ): void {
 		$indexer->register_filter(
-			new Query_Filter_Filter_Range(
-				'price',
-				new Query_Filter_Source_Post_Meta( 'price' )
+			new Query_Filter_Filter_Checkboxes(
+				'brand',
+				new Query_Filter_Source_Post_Meta( 'brand' )
 			)
 		);
 	}
 );
 ```
 
-Use the **same filter name** in the block (`filterName`) as in `register_filter()`. Registering another `Query_Filter_Filter_Date_Range` with the name **`post_date`** replaces the default.
+Use the **same filter name** in the block (`filterName`) as in `register_filter()`, then rebuild the index if needed.
 
 ## Hooks and customizing the front end
 

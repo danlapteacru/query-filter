@@ -1,7 +1,7 @@
 # Multi-facet types (FacetWP-style)
 
 **Date:** 2026-04-03  
-**Status:** Implemented
+**Status:** Superseded — numeric range and date range **were removed** from the plugin; this file is historical. Discrete facets (checkboxes, radio, dropdown) remain.
 
 ## Goal
 

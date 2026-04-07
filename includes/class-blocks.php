@@ -15,10 +15,8 @@ final class Query_Filter_Blocks {
 	private const DEFAULT_BUILD_DIRECTORIES = [
 		'filter-container',
 		'filter-checkboxes',
-		'filter-date-range',
 		'filter-dropdown',
 		'filter-radio',
-		'filter-range',
 		'filter-search',
 		'filter-sort',
 		'filter-pager',

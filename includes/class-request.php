@@ -5,7 +5,7 @@ declare(strict_types=1);
 final class Query_Filter_Request {
 
 	/**
-	 * @param array<string, array<string, mixed>> $filters Normalized configs (discrete, range, or date_range).
+	 * @param array<string, array<string, mixed>> $filters Normalized discrete configs.
 	 */
 	public function __construct(
 		public readonly int $query_id,
@@ -76,39 +76,6 @@ final class Query_Filter_Request {
 						];
 					}
 					continue;
-				}
-
-				if ( array_key_exists( 'min', $entry ) || array_key_exists( 'max', $entry ) ) {
-					$min = array_key_exists( 'min', $entry )
-						? sanitize_text_field( (string) $entry['min'] )
-						: '';
-					$max = array_key_exists( 'max', $entry )
-						? sanitize_text_field( (string) $entry['max'] )
-						: '';
-					if ( $min !== '' || $max !== '' ) {
-						$filters[ $key ] = [
-							'kind' => 'range',
-							'min'  => $min,
-							'max'  => $max,
-						];
-					}
-					continue;
-				}
-
-				if ( array_key_exists( 'after', $entry ) || array_key_exists( 'before', $entry ) ) {
-					$after  = array_key_exists( 'after', $entry )
-						? sanitize_text_field( (string) $entry['after'] )
-						: '';
-					$before = array_key_exists( 'before', $entry )
-						? sanitize_text_field( (string) $entry['before'] )
-						: '';
-					if ( $after !== '' || $before !== '' ) {
-						$filters[ $key ] = [
-							'kind'   => 'date_range',
-							'after'  => $after,
-							'before' => $before,
-						];
-					}
 				}
 			}
 		}
