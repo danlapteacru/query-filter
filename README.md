@@ -76,7 +76,7 @@ export WP_TESTS_DIR=/path/to/wordpress-tests-lib
 
 1. Add a **Query Loop** and note its **Query ID** (block settings).
 2. Add **Filter Container**, set **Query Loop ID** to match.
-3. Inside the container, add **Filter: Checkboxes** (and search/sort/reset as needed). Configure taxonomy/source and filter name.
+3. Inside the container, add **Filter: Checkboxes** / **Radio** / **Dropdown** (and search/sort/reset as needed). **Filter name** must match the key in the index: for built-in taxonomy filters that is the **taxonomy slug** (e.g. `category`), not a display label. If you rename “Filter name” in the sidebar, keep it equal to **Source key** for taxonomy, or options stay empty. Radio/dropdown render templates fall back to Source key when the name does not match the index.
 4. Set **Combine filters** on the container to **Match all (AND)** or **Match any (OR)** across multiple checkbox filters.
 5. On each checkbox block, set **Match** for multiple selected terms: **any** vs **all**.
 

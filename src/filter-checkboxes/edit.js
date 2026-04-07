@@ -38,7 +38,7 @@ export default function Edit({ attributes, setAttributes }) {
                     <TextControl
                         label={__("Filter Name", "query-filter")}
                         help={__(
-                            "Unique identifier for this filter (used in index).",
+                            "Indexed key: for taxonomy, use the taxonomy slug (same as Source key). Used in REST and URL state.",
                             "query-filter",
                         )}
                         value={filterName}

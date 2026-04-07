@@ -37,7 +37,7 @@ export default function Edit({ attributes, setAttributes }) {
                     <TextControl
                         label={__("Filter Name", "query-filter")}
                         help={__(
-                            "Must match the indexed filter (e.g. taxonomy slug).",
+                            "Indexed key: for taxonomy, use the taxonomy slug (match Source key).",
                             "query-filter",
                         )}
                         value={filterName}

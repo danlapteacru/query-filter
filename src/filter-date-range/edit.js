@@ -13,7 +13,7 @@ export default function Edit({ attributes, setAttributes }) {
                     <TextControl
                         label={__("Filter name", "query-filter")}
                         help={__(
-                            "Must match a registered Query_Filter_Filter_Date_Range.",
+                            "Must exactly match the name passed to register_filter() for Query_Filter_Filter_Date_Range in PHP (see README).",
                             "query-filter",
                         )}
                         value={filterName}

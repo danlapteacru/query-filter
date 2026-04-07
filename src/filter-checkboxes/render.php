@@ -8,25 +8,29 @@ declare(strict_types=1);
 
 $block_name = ( isset( $block ) && $block instanceof WP_Block ) ? $block->name : '';
 
-$filter_name = $attributes['filterName'] ?? '';
-$source_type = $attributes['sourceType'] ?? 'taxonomy';
-$source_key  = $attributes['sourceKey'] ?? 'category';
 $label       = $attributes['label'] ?? '';
 $show_label  = $attributes['showLabel'] ?? true;
 $show_counts = $attributes['showCounts'] ?? true;
 $logic       = $attributes['logic'] ?? 'OR';
 
-if ( empty( $filter_name ) ) {
+$indexer = Query_Filter_Plugin::instance()->get_indexer();
+[ $filter_name, $filter ] = Query_Filter_Render_Hooks::resolve_discrete_checkbox_filter( $indexer, $attributes );
+
+if ( $filter_name === '' ) {
 	echo Query_Filter_Render_Hooks::block_html( '', $block_name, $attributes, [] );
 	return;
 }
 
-$indexer = Query_Filter_Plugin::instance()->get_indexer();
-$filter  = $indexer ? $indexer->get_filter( $filter_name ) : null;
 $options = [];
-
 if ( $filter instanceof Query_Filter_Filter_Checkboxes ) {
 	$options = $filter->load_values( [] );
+} elseif ( current_user_can( 'manage_options' ) ) {
+	echo '<p class="wp-block-query-filter__setup-notice" style="font-size:13px;color:#646970;margin:0 0 8px;">';
+	esc_html_e(
+		'No index filter matches this block. Use the taxonomy slug or registered filter name (see Source key / README).',
+		'query-filter'
+	);
+	echo '</p>';
 }
 
 $context = [

@@ -74,4 +74,46 @@ final class Query_Filter_Render_Hooks {
 
 		return self::filter_interactivity_context( $context, $attributes, $block_name );
 	}
+
+	/**
+	 * Map block attributes to a registered checkbox-style filter. Index keys are taxonomy slugs
+	 * (e.g. category), not display labels — if filterName is a custom label, sourceKey is used.
+	 *
+	 * @param array<string, mixed> $attributes filterName, sourceType, sourceKey.
+	 * @return array{0: string, 1: Query_Filter_Filter_Checkboxes|null}
+	 */
+	public static function resolve_discrete_checkbox_filter( ?Query_Filter_Indexer $indexer, array $attributes ): array {
+		$candidate   = sanitize_key( (string) ( $attributes['filterName'] ?? '' ) );
+		$source_type = (string) ( $attributes['sourceType'] ?? 'taxonomy' );
+		$source_key  = sanitize_key( (string) ( $attributes['sourceKey'] ?? '' ) );
+
+		$try = static function ( string $key ) use ( $indexer ): ?Query_Filter_Filter_Checkboxes {
+			if ( $indexer === null || $key === '' ) {
+				return null;
+			}
+			$f = $indexer->get_filter( $key );
+			return $f instanceof Query_Filter_Filter_Checkboxes ? $f : null;
+		};
+
+		$f = $try( $candidate );
+		if ( $f !== null ) {
+			return [ $candidate, $f ];
+		}
+
+		if ( $source_type === 'taxonomy' && $source_key !== '' ) {
+			$f = $try( $source_key );
+			if ( $f !== null ) {
+				return [ $source_key, $f ];
+			}
+		}
+
+		if ( $source_type === 'postmeta' && $source_key !== '' ) {
+			$f = $try( $source_key );
+			if ( $f !== null ) {
+				return [ $source_key, $f ];
+			}
+		}
+
+		return [ $candidate, null ];
+	}
 }
