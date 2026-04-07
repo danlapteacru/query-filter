@@ -36,7 +36,7 @@ final class Query_Filter_Query_Engine {
 	/**
 	 * Resolve matching post IDs from the index based on active filters.
 	 *
-	 * @param array<string, array{values: string[], logic: string}> $active_filters
+	 * @param array<string, array<string, mixed>> $active_filters Normalized configs (see Query_Filter_Request).
 	 * @return int[]
 	 */
 	public function get_post_ids( array $active_filters, string $between_filters_logic = 'AND' ): array {
@@ -48,40 +48,70 @@ final class Query_Filter_Query_Engine {
 			return array_map( 'intval', $ids );
 		}
 
-		$sets = array();
+		$sets = [];
 
 		foreach ( $active_filters as $filter_name => $config ) {
-			$values = $config['values'];
-			$logic  = strtoupper( $config['logic'] );
-
-			if ( empty( $values ) ) {
+			if ( ! is_array( $config ) ) {
 				continue;
 			}
 
-			$placeholders = implode( ',', array_fill( 0, count( $values ), '%s' ) );
-			$params       = array_merge( array( $filter_name ), $values );
+			$kind = strtolower( (string) ( $config['kind'] ?? 'discrete' ) );
 
-			if ( $logic === 'AND' ) {
-				$sql = $wpdb->prepare(
-					"SELECT post_id FROM {$table}
-					 WHERE filter_name = %s AND filter_value IN ({$placeholders})
-					 GROUP BY post_id
-					 HAVING COUNT(DISTINCT filter_value) = %d",
-					array_merge( $params, array( count( $values ) ) )
-				);
-			} else {
-				$sql = $wpdb->prepare(
-					"SELECT DISTINCT post_id FROM {$table}
-					 WHERE filter_name = %s AND filter_value IN ({$placeholders})",
-					$params
-				);
+			if ( $kind === 'discrete' ) {
+				$values = isset( $config['values'] ) && is_array( $config['values'] ) ? $config['values'] : [];
+				$logic  = strtoupper( (string) ( $config['logic'] ?? 'OR' ) );
+
+				if ( $values === [] ) {
+					continue;
+				}
+
+				$placeholders = implode( ',', array_fill( 0, count( $values ), '%s' ) );
+				$params       = array_merge( [ $filter_name ], $values );
+
+				if ( $logic === 'AND' ) {
+					$sql = $wpdb->prepare(
+						"SELECT post_id FROM {$table}
+						 WHERE filter_name = %s AND filter_value IN ({$placeholders})
+						 GROUP BY post_id
+						 HAVING COUNT(DISTINCT filter_value) = %d",
+						array_merge( $params, [ count( $values ) ] )
+					);
+				} else {
+					$sql = $wpdb->prepare(
+						"SELECT DISTINCT post_id FROM {$table}
+						 WHERE filter_name = %s AND filter_value IN ({$placeholders})",
+						$params
+					);
+				}
+
+				$ids    = $wpdb->get_col( $sql );
+				$sets[] = array_map( 'intval', $ids );
+				continue;
 			}
 
-			$ids    = $wpdb->get_col( $sql );
-			$sets[] = array_map( 'intval', $ids );
+			if ( $kind === 'range' ) {
+				$min = isset( $config['min'] ) ? (string) $config['min'] : '';
+				$max = isset( $config['max'] ) ? (string) $config['max'] : '';
+				$ids = Query_Filter_Filter_Range::get_matching_post_ids( $filter_name, $min, $max );
+				if ( $ids === null ) {
+					continue;
+				}
+				$sets[] = $ids;
+				continue;
+			}
+
+			if ( $kind === 'date_range' ) {
+				$after  = isset( $config['after'] ) ? (string) $config['after'] : '';
+				$before = isset( $config['before'] ) ? (string) $config['before'] : '';
+				$ids    = Query_Filter_Filter_Date_Range::get_matching_post_ids( $filter_name, $after, $before );
+				if ( $ids === null ) {
+					continue;
+				}
+				$sets[] = $ids;
+			}
 		}
 
-		if ( empty( $sets ) ) {
+		if ( $sets === [] ) {
 			$ids = $wpdb->get_col( "SELECT DISTINCT post_id FROM {$table}" );
 			return array_map( 'intval', $ids );
 		}

@@ -43,23 +43,54 @@ final class Query_Filter_Rest_Controller {
 			return new \WP_REST_Response( array( 'error' => 'Indexer not configured' ), 500 );
 		}
 
-		// Build active filters with logic config (per-filter within-filter logic).
-		$active_filters = array();
+		// Keep only configs whose filter type matches (avoid mismatched payloads).
+		$active_filters = [];
 		foreach ( $request->filters as $filter_name => $config ) {
-			$filter = $indexer->get_filter( $filter_name );
-			if ( ! $filter instanceof Query_Filter_Filter_Checkboxes ) {
+			if ( ! is_array( $config ) ) {
 				continue;
 			}
-			$values = $config['values'];
-			$logic  = strtoupper( $config['logic'] );
-			if ( $logic !== 'AND' ) {
-				$logic = 'OR';
+			$filter = $indexer->get_filter( $filter_name );
+			if ( $filter === null ) {
+				continue;
 			}
-			if ( $values !== array() ) {
-				$active_filters[ $filter_name ] = array(
-					'values' => $values,
-					'logic'  => $logic,
-				);
+			$kind = strtolower( (string) ( $config['kind'] ?? '' ) );
+			if ( $kind === 'discrete' && $filter instanceof Query_Filter_Filter_Checkboxes ) {
+				$values = isset( $config['values'] ) && is_array( $config['values'] ) ? $config['values'] : [];
+				$logic  = strtoupper( (string) ( $config['logic'] ?? 'OR' ) );
+				if ( $logic !== 'AND' ) {
+					$logic = 'OR';
+				}
+				if ( $values !== [] ) {
+					$active_filters[ $filter_name ] = [
+						'kind'   => 'discrete',
+						'values' => $values,
+						'logic'  => $logic,
+					];
+				}
+				continue;
+			}
+			if ( $kind === 'range' && $filter instanceof Query_Filter_Filter_Range ) {
+				$min = isset( $config['min'] ) ? (string) $config['min'] : '';
+				$max = isset( $config['max'] ) ? (string) $config['max'] : '';
+				if ( $min !== '' || $max !== '' ) {
+					$active_filters[ $filter_name ] = [
+						'kind' => 'range',
+						'min'  => $min,
+						'max'  => $max,
+					];
+				}
+				continue;
+			}
+			if ( $kind === 'date_range' && $filter instanceof Query_Filter_Filter_Date_Range ) {
+				$after  = isset( $config['after'] ) ? (string) $config['after'] : '';
+				$before = isset( $config['before'] ) ? (string) $config['before'] : '';
+				if ( $after !== '' || $before !== '' ) {
+					$active_filters[ $filter_name ] = [
+						'kind'   => 'date_range',
+						'after'  => $after,
+						'before' => $before,
+					];
+				}
 			}
 		}
 
@@ -87,14 +118,22 @@ final class Query_Filter_Rest_Controller {
 		);
 
 		// Load filter values (counts scoped to matching posts).
-		$filter_states = array();
+		$filter_states = [];
 		foreach ( $indexer->get_filters() as $name => $filter ) {
 			if ( $filter instanceof Query_Filter_Filter_Checkboxes ) {
 				$filter_states[ $name ] = $filter->load_values(
-					array(
+					[
 						'post_ids' => $all_post_ids,
-					)
+					]
 				);
+				continue;
+			}
+			if ( $filter instanceof Query_Filter_Filter_Range ) {
+				$filter_states[ $name ] = $filter->load_bounds( $all_post_ids );
+				continue;
+			}
+			if ( $filter instanceof Query_Filter_Filter_Date_Range ) {
+				$filter_states[ $name ] = $filter->load_bounds( $all_post_ids );
 			}
 		}
 

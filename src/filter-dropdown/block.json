@@ -1,0 +1,32 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "query-filter/filter-dropdown",
+  "version": "0.1.0",
+  "title": "Filter: Dropdown",
+  "category": "theme",
+  "icon": "arrow-down-alt2",
+  "description": "Select dropdown filter (same index as checkboxes).",
+  "parent": ["query-filter/filter-container"],
+  "usesContext": ["query-filter/queryId"],
+  "supports": {
+    "html": false,
+    "interactivity": true,
+    "spacing": { "margin": true, "padding": true }
+  },
+  "attributes": {
+    "filterName": { "type": "string", "default": "" },
+    "sourceType": { "type": "string", "default": "taxonomy" },
+    "sourceKey": { "type": "string", "default": "category" },
+    "logic": { "type": "string", "default": "OR", "enum": ["OR", "AND"] },
+    "label": { "type": "string", "default": "" },
+    "showLabel": { "type": "boolean", "default": true },
+    "showCounts": { "type": "boolean", "default": true },
+    "limit": { "type": "number", "default": 0 },
+    "placeholder": { "type": "string", "default": "" }
+  },
+  "textdomain": "query-filter",
+  "editorScript": "file:./index.js",
+  "viewScriptModule": "file:./view.js",
+  "render": "file:./render.php"
+}

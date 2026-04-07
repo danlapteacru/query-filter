@@ -61,6 +61,13 @@ final class Query_Filter_Plugin {
 			$source = new Query_Filter_Source_Taxonomy( $taxonomy );
 			$this->indexer->register_filter( new Query_Filter_Filter_Checkboxes( $taxonomy, $source ) );
 		}
+
+		/**
+		 * Register numeric range / date range / custom filters on the indexer.
+		 *
+		 * @param Query_Filter_Indexer $indexer
+		 */
+		do_action( 'query_filter/indexer/register_filters', $this->indexer );
 	}
 
 	public function register_blocks(): void {

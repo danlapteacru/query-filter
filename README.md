@@ -9,8 +9,11 @@ WordPress plugin that adds **index-backed filtering** for **Query Loop** blocks.
 - **Custom index table** (`{prefix}query_filter_index`) storing per-post filter rows for fast ID resolution.
 - **Automatic indexing** on publish/update/delete posts and when terms change; optional **cron** batch rebuild; **activation** creates the table and schedules a full rebuild.
 - **Gutenberg blocks** (built from `src/` into `build/`):
-  - **Filter container** — wraps child filters, links to a Query Loop via `queryId`; **Combine filters** (AND/OR across checkbox filters).
-  - **Filter: Checkboxes** — taxonomy-backed options; **Match** any or all values within that filter.
+  - **Filter container** — wraps child filters, links to a Query Loop via `queryId`; **Combine filters** (AND/OR across filters).
+  - **Filter: Checkboxes** — multi-select; taxonomy-backed options; **Match** any or all values within that filter.
+  - **Filter: Radio** / **Filter: Dropdown** — single choice; same indexed values as checkboxes (taxonomy terms, etc.).
+  - **Filter: Number range** — min/max inputs and optional dual range sliders; requires a registered **`Query_Filter_Filter_Range`** (see hooks below).
+  - **Filter: Date range** — `after` / `before` (`Y-m-d`); requires **`Query_Filter_Filter_Date_Range`**.
   - **Filter: Search**, **Sort**, **Reset** — live inside the container.
   - **Filter: Pager** — intended inside the Query Loop (pagination).
 - **REST API:** `POST /wp-json/query-filter/v1/results` — JSON body parsed by `Query_Filter_Request` (filters, optional `filtersRelationship`, sort, search, page, etc.).
@@ -89,8 +92,34 @@ Typical JSON fields:
 |-------|------|
 | `queryId`, `pageId` | Target Query Loop and page context |
 | `page`, `orderby`, `order`, `search` | Pagination and query refinement |
-| `filtersRelationship` | `AND` or `OR` across checkbox filters |
-| `filters` | Per filter: legacy `name: ["slug", …]` or `name: { values, logic }` |
+| `filtersRelationship` | `AND` or `OR` across filters |
+| `filters` | Discrete: `name: ["slug", …]` or `name: { values, logic }`. Numeric range: `name: { min, max }`. Date range: `name: { after, before }` (ISO `Y-m-d`). |
+
+### Numeric and date facets (PHP)
+
+Taxonomy filters are registered automatically. For **meta price**, **published date**, etc., register filters on the indexer:
+
+```php
+add_action(
+	'query_filter/indexer/register_filters',
+	static function ( Query_Filter_Indexer $indexer ): void {
+		$indexer->register_filter(
+			new Query_Filter_Filter_Range(
+				'price',
+				new Query_Filter_Source_Post_Meta( 'price' )
+			)
+		);
+		$indexer->register_filter(
+			new Query_Filter_Filter_Date_Range(
+				'published',
+				new Query_Filter_Source_Post_Date()
+			)
+		);
+	}
+);
+```
+
+Use the **same filter name** in the block settings (`filterName`) as in `register_filter()`.
 
 ## Hooks and customizing the front end
 

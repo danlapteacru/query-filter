@@ -24,6 +24,12 @@
 | `query_filter/render/checkboxes/context` | filter | `$context`, `$attributes` | **Legacy**; still run for checkbox block before the generic filter. |
 | `query_filter/rest/response` | filter | `$data` (array) | Keys: `results_html`, `filters`, `total`, `pages`. |
 
+## Actions
+
+| Hook | Args | Notes |
+|------|------|--------|
+| `query_filter/indexer/register_filters` | `Query_Filter_Indexer $indexer` | Register `Query_Filter_Filter_Range`, `Query_Filter_Filter_Date_Range`, or other custom filters. |
+
 ---
 
 ## WordPress core alternative
@@ -45,3 +51,4 @@
 - `Query_Filter_Plugin::register_blocks()` uses `Query_Filter_Blocks::get_build_directories()`.
 - `Query_Filter_Render_Hooks` — `block_html()`, `filter_interactivity_context()`, `filter_checkboxes_interactivity_context()` (legacy + generic).
 - Block `render.php` files use `$block->name` for hook arguments.
+- `Query_Filter_Plugin::configure_indexer()` fires **`query_filter/indexer/register_filters`** after taxonomy checkbox filters.

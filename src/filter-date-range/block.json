@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "query-filter/filter-date-range",
+  "version": "0.1.0",
+  "title": "Filter: Date range",
+  "category": "theme",
+  "icon": "calendar",
+  "description": "After/before ISO dates (register Query_Filter_Filter_Date_Range via query_filter/indexer/register_filters).",
+  "parent": ["query-filter/filter-container"],
+  "usesContext": ["query-filter/queryId"],
+  "supports": {
+    "html": false,
+    "interactivity": true,
+    "spacing": { "margin": true, "padding": true }
+  },
+  "attributes": {
+    "filterName": { "type": "string", "default": "" },
+    "label": { "type": "string", "default": "" },
+    "showLabel": { "type": "boolean", "default": true }
+  },
+  "textdomain": "query-filter",
+  "editorScript": "file:./index.js",
+  "viewScriptModule": "file:./view.js",
+  "render": "file:./render.php"
+}

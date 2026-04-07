@@ -1,22 +1,33 @@
 import { store } from "@wordpress/interactivity";
 
 const PAGER_SELECTOR = ".wp-block-query-filter-filter-pager";
-/** Wrapper from block name `query-filter/filter-checkboxes` → …-filter-checkboxes */
 const CHECKBOXES_BLOCK_SELECTOR = ".wp-block-query-filter-filter-checkboxes";
-/** Wrapper from `query-filter/filter-sort` */
+/** Checkboxes, radio, and dropdown share discrete `string[]` store values. */
+const DISCRETE_FILTER_SELECTOR = `${CHECKBOXES_BLOCK_SELECTOR}, .wp-block-query-filter-filter-radio, .wp-block-query-filter-filter-dropdown`;
+const RANGE_FILTER_SELECTOR = ".wp-block-query-filter-filter-range";
+const DATE_RANGE_FILTER_SELECTOR = ".wp-block-query-filter-filter-date-range";
 const SORT_BLOCK_SELECTOR = ".wp-block-query-filter-filter-sort";
 
-/** Query-string keys for shareable filter state (no qf_ prefix). */
 const URL_SEARCH = "search";
-/** Not `page` / `paged` — those are WordPress query vars. */
 const URL_PAGE = "pg";
-/** Between-filter mode: `and` (default) or `or`. */
 const URL_FILTERS_RELATIONSHIP = "frel";
 
 /**
- * REST returns a full core/query render; the live DOM already has the outer
- * .wp-block-query. Keep inner markup only to avoid nested query wrappers.
- *
+ * @param {Element} block
+ * @return {string}
+ */
+function readFilterNameFromBlock(block) {
+    try {
+        const n = JSON.parse(
+            block.getAttribute("data-wp-context") || "{}",
+        ).filterName;
+        return typeof n === "string" ? n : "";
+    } catch {
+        return "";
+    }
+}
+
+/**
  * @param {string} html
  * @return {string}
  */
@@ -33,11 +44,7 @@ function stripOuterQueryBlockHtml(html) {
 }
 
 /**
- * querySelector does not match the root element itself. When data-query-filter-query
- * is on the post template ul (first tag in some themes), the old code saw no template
- * and wiped the query block via innerHTML.
- *
- * @param {HTMLElement} container Node that has data-query-filter-query (query root or list).
+ * @param {HTMLElement} container
  * @return {HTMLElement|null}
  */
 function findPostTemplateRoot(container) {
@@ -54,33 +61,97 @@ function findPostTemplateRoot(container) {
 }
 
 /**
- * Keep checkbox DOM aligned with store (reset, fetch, no bind--checked).
+ * Sync checkbox, radio, and select UI from `state._filters`.
  */
-function syncCheckboxDomFromStore() {
+function syncDiscreteFilterDomFromStore() {
     const { state } = store("query-filter");
     const filters = state._filters || {};
-    document.querySelectorAll(CHECKBOXES_BLOCK_SELECTOR).forEach((block) => {
-        let filterName = "";
-        try {
-            filterName =
-                JSON.parse(block.getAttribute("data-wp-context") || "{}")
-                    .filterName || "";
-        } catch {
-            return;
-        }
+    document.querySelectorAll(DISCRETE_FILTER_SELECTOR).forEach((block) => {
+        const filterName = readFilterNameFromBlock(block);
         if (!filterName) {
             return;
         }
-        const selected = filters[filterName] || [];
+        const raw = filters[filterName];
+        const selected = Array.isArray(raw)
+            ? raw.filter((v) => typeof v === "string")
+            : [];
         block.querySelectorAll('input[type="checkbox"]').forEach((input) => {
             input.checked = selected.includes(input.value);
+        });
+        block.querySelectorAll('input[type="radio"]').forEach((input) => {
+            input.checked = selected.length > 0 && selected[0] === input.value;
+        });
+        const sel = block.querySelector("select");
+        if (sel instanceof HTMLSelectElement) {
+            const v = selected.length > 0 ? selected[0] : "";
+            sel.value = v;
+        }
+    });
+}
+
+function syncRangeDomFromStore() {
+    const { state } = store("query-filter");
+    const filters = state._filters || {};
+    document.querySelectorAll(RANGE_FILTER_SELECTOR).forEach((block) => {
+        const name = readFilterNameFromBlock(block);
+        if (!name) {
+            return;
+        }
+        const v = filters[name];
+        const payload =
+            v && typeof v === "object" && v.__queryFilterKind === "range"
+                ? v
+                : { min: "", max: "" };
+        block.querySelectorAll("[data-query-filter-range]").forEach((el) => {
+            if (!(el instanceof HTMLInputElement)) {
+                return;
+            }
+            const part = el.getAttribute("data-query-filter-range");
+            if (part === "min") {
+                el.value = typeof payload.min === "string" ? payload.min : "";
+            } else if (part === "max") {
+                el.value = typeof payload.max === "string" ? payload.max : "";
+            }
         });
     });
 }
 
+function syncDateRangeDomFromStore() {
+    const { state } = store("query-filter");
+    const filters = state._filters || {};
+    document.querySelectorAll(DATE_RANGE_FILTER_SELECTOR).forEach((block) => {
+        const name = readFilterNameFromBlock(block);
+        if (!name) {
+            return;
+        }
+        const v = filters[name];
+        const payload =
+            v && typeof v === "object" && v.__queryFilterKind === "dateRange"
+                ? v
+                : { after: "", before: "" };
+        block.querySelectorAll("[data-query-filter-date]").forEach((el) => {
+            if (!(el instanceof HTMLInputElement)) {
+                return;
+            }
+            const part = el.getAttribute("data-query-filter-date");
+            if (part === "after") {
+                el.value =
+                    typeof payload.after === "string" ? payload.after : "";
+            } else if (part === "before") {
+                el.value =
+                    typeof payload.before === "string" ? payload.before : "";
+            }
+        });
+    });
+}
+
+function syncAllFilterDomFromStore() {
+    syncDiscreteFilterDomFromStore();
+    syncRangeDomFromStore();
+    syncDateRangeDomFromStore();
+}
+
 /**
- * Per-filter within-filter logic from checkbox block `data-wp-context` (authoritative on front).
- *
  * @return {Record<string, 'AND'|'OR'>}
  */
 function collectCheckboxFilterLogicByName() {
@@ -105,57 +176,101 @@ function collectCheckboxFilterLogicByName() {
 }
 
 /**
- * REST `filters` object: values + per-filter logic.
- *
- * @return {Record<string, { values: string[], logic: string }>}
+ * @return {Record<string, unknown>}
  */
 function filtersPayloadFromStore() {
     const { state } = store("query-filter");
     const raw = state._filters || {};
     const logicByName = collectCheckboxFilterLogicByName();
-    /** @type {Record<string, { values: string[], logic: string }>} */
+    /** @type {Record<string, unknown>} */
     const out = {};
     for (const key of Object.keys(raw)) {
-        const arr = raw[key];
-        if (!Array.isArray(arr)) {
+        const v = raw[key];
+        if (Array.isArray(v)) {
+            const values = v.filter((x) => typeof x === "string");
+            if (values.length === 0) {
+                continue;
+            }
+            const logic = logicByName[key] || "OR";
+            out[key] = { values, logic };
             continue;
         }
-        const values = arr.filter((v) => typeof v === "string");
-        if (values.length === 0) {
+        if (v && typeof v === "object" && v.__queryFilterKind === "range") {
+            const min = typeof v.min === "string" ? v.min : "";
+            const max = typeof v.max === "string" ? v.max : "";
+            if (min === "" && max === "") {
+                continue;
+            }
+            out[key] = { min, max };
             continue;
         }
-        const logic = logicByName[key] || "OR";
-        out[key] = { values, logic };
+        if (v && typeof v === "object" && v.__queryFilterKind === "dateRange") {
+            const after = typeof v.after === "string" ? v.after : "";
+            const before = typeof v.before === "string" ? v.before : "";
+            if (after === "" && before === "") {
+                continue;
+            }
+            out[key] = { after, before };
+        }
     }
     return out;
 }
 
 /**
- * Checkbox filter names used in the URL (same keys as REST `filters`).
- *
  * @return {Set<string>}
  */
-function collectCheckboxFilterUrlKeys() {
+function collectDiscreteFilterUrlKeys() {
     const names = new Set();
-    document.querySelectorAll(CHECKBOXES_BLOCK_SELECTOR).forEach((block) => {
-        try {
-            const n = JSON.parse(
-                block.getAttribute("data-wp-context") || "{}",
-            ).filterName;
-            if (typeof n === "string" && n !== "") {
-                names.add(n);
-            }
-        } catch {
-            // ignore
+    document.querySelectorAll(DISCRETE_FILTER_SELECTOR).forEach((block) => {
+        const n = readFilterNameFromBlock(block);
+        if (n) {
+            names.add(n);
         }
     });
     return names;
 }
 
 /**
- * Sync the address bar to store: strip stale filter params, then apply current state.
- *
- * @param {boolean} stripEntireQuery When true (reset), remove all ?… params; otherwise only plugin keys.
+ * @return {Set<string>}
+ */
+function collectRangeFilterUrlKeys() {
+    const names = new Set();
+    document.querySelectorAll(RANGE_FILTER_SELECTOR).forEach((block) => {
+        const n = readFilterNameFromBlock(block);
+        if (n) {
+            names.add(n);
+        }
+    });
+    return names;
+}
+
+/**
+ * @return {Set<string>}
+ */
+function collectDateRangeFilterUrlKeys() {
+    const names = new Set();
+    document.querySelectorAll(DATE_RANGE_FILTER_SELECTOR).forEach((block) => {
+        const n = readFilterNameFromBlock(block);
+        if (n) {
+            names.add(n);
+        }
+    });
+    return names;
+}
+
+/**
+ * @return {Set<string>}
+ */
+function collectAllFilterUrlKeys() {
+    const s = new Set();
+    collectDiscreteFilterUrlKeys().forEach((k) => s.add(k));
+    collectRangeFilterUrlKeys().forEach((k) => s.add(k));
+    collectDateRangeFilterUrlKeys().forEach((k) => s.add(k));
+    return s;
+}
+
+/**
+ * @param {boolean} stripEntireQuery
  */
 function pushFilterStateToUrl(stripEntireQuery = false) {
     const url = new URL(window.location.href);
@@ -165,7 +280,7 @@ function pushFilterStateToUrl(stripEntireQuery = false) {
         return;
     }
     const { state } = store("query-filter");
-    const strip = collectCheckboxFilterUrlKeys();
+    const strip = collectAllFilterUrlKeys();
     strip.add(URL_SEARCH);
     strip.add(URL_PAGE);
     strip.add(URL_FILTERS_RELATIONSHIP);
@@ -185,6 +300,26 @@ function pushFilterStateToUrl(stripEntireQuery = false) {
         const values = filters[name];
         if (Array.isArray(values) && values.length > 0) {
             url.searchParams.set(name, values.join(","));
+        } else if (
+            values &&
+            typeof values === "object" &&
+            values.__queryFilterKind === "range"
+        ) {
+            const min = typeof values.min === "string" ? values.min : "";
+            const max = typeof values.max === "string" ? values.max : "";
+            if (min !== "" || max !== "") {
+                url.searchParams.set(name, `${min}..${max}`);
+            }
+        } else if (
+            values &&
+            typeof values === "object" &&
+            values.__queryFilterKind === "dateRange"
+        ) {
+            const a = typeof values.after === "string" ? values.after : "";
+            const b = typeof values.before === "string" ? values.before : "";
+            if (a !== "" || b !== "") {
+                url.searchParams.set(name, `${a}..${b}`);
+            }
         }
     }
     if (state.search) {
@@ -201,12 +336,8 @@ function pushFilterStateToUrl(stripEntireQuery = false) {
 }
 
 /**
- * Update posts. Never swap the pager node for server HTML: new markup is not
- * Interactivity-hydrated, so Next/Prev would stop working. Only replace the
- * post template; on full innerHTML, detach the live pager and re-append it.
- *
- * @param {HTMLElement} container Query block root (data-query-filter-query).
- * @param {string}      html      Full render_block( core/query ) HTML.
+ * @param {HTMLElement} container
+ * @param {string}      html
  */
 function applyQueryFilterResults(container, html) {
     const inner = stripOuterQueryBlockHtml(html);
@@ -219,7 +350,6 @@ function applyQueryFilterResults(container, html) {
         oldTemplate !== null && oldTemplate === container;
 
     if (newTemplate && oldTemplate) {
-        // Never replace the node that carries data-query-filter-query (breaks next fetch).
         if (listTargetIsContainer) {
             const nextNodes = Array.from(newTemplate.childNodes);
             oldTemplate.replaceChildren(...nextNodes);
@@ -229,9 +359,6 @@ function applyQueryFilterResults(container, html) {
         return;
     }
 
-    // Server markup without a template wrapper (e.g. legacy bare <li>) or empty results:
-    // refresh list items inside the live <ul> so we never replace container.innerHTML
-    // (that would delete sibling filter blocks and drop the list wrapper).
     if (oldTemplate) {
         const newPosts = wrap.querySelectorAll(".wp-block-post");
         if (newPosts.length > 0) {
@@ -242,7 +369,6 @@ function applyQueryFilterResults(container, html) {
         return;
     }
 
-    // Fallback (e.g. render_simple): preserve the same pager element (not a clone).
     const livePager = container.querySelector(PAGER_SELECTOR);
     if (livePager) {
         livePager.remove();
@@ -321,7 +447,7 @@ const { state } = store("query-filter", {
                 state.initialFiltersRelationship || "AND",
             ).toUpperCase();
             state.filtersRelationship = initRel === "OR" ? "OR" : "AND";
-            syncCheckboxDomFromStore();
+            syncAllFilterDomFromStore();
             pushFilterStateToUrl(true);
             store("query-filter").actions.fetchResults();
         },
@@ -370,7 +496,7 @@ const { state } = store("query-filter", {
                 state.total = data.total;
                 state.pages = data.pages;
 
-                syncCheckboxDomFromStore();
+                syncAllFilterDomFromStore();
 
                 pushFilterStateToUrl();
             } catch (e) {
@@ -382,9 +508,6 @@ const { state } = store("query-filter", {
     },
 });
 
-/**
- * Optional URL override for between-filter mode (`frel=or` / `frel=and`).
- */
 function hydrateFiltersRelationshipFromUrl() {
     const { state: filterState } = store("query-filter");
     const raw = new URL(window.location.href).searchParams.get(
@@ -399,4 +522,68 @@ function hydrateFiltersRelationshipFromUrl() {
     }
 }
 
+function hydrateFiltersFromUrl() {
+    const url = new URL(window.location.href);
+    const { state: s } = store("query-filter");
+    const next = { ...s._filters };
+
+    collectDiscreteFilterUrlKeys().forEach((name) => {
+        const raw = url.searchParams.get(name);
+        if (raw === null || raw === "") {
+            return;
+        }
+        next[name] = raw.split(",").filter(Boolean);
+    });
+
+    collectRangeFilterUrlKeys().forEach((name) => {
+        const raw = url.searchParams.get(name);
+        if (raw === null || raw === "") {
+            return;
+        }
+        const idx = raw.indexOf("..");
+        const min = idx === -1 ? raw : raw.slice(0, idx);
+        const max = idx === -1 ? "" : raw.slice(idx + 2);
+        next[name] = {
+            __queryFilterKind: "range",
+            min,
+            max,
+        };
+    });
+
+    collectDateRangeFilterUrlKeys().forEach((name) => {
+        const raw = url.searchParams.get(name);
+        if (raw === null || raw === "") {
+            return;
+        }
+        const idx = raw.indexOf("..");
+        const after = idx === -1 ? raw : raw.slice(0, idx);
+        const before = idx === -1 ? "" : raw.slice(idx + 2);
+        next[name] = {
+            __queryFilterKind: "dateRange",
+            after,
+            before,
+        };
+    });
+
+    s._filters = next;
+}
+
+function urlHasFacetParams() {
+    const url = new URL(window.location.href);
+    for (const k of collectAllFilterUrlKeys()) {
+        const v = url.searchParams.get(k);
+        if (v !== null && v !== "") {
+            return true;
+        }
+    }
+    const s = url.searchParams.get(URL_SEARCH);
+    return typeof s === "string" && s !== "";
+}
+
 hydrateFiltersRelationshipFromUrl();
+hydrateFiltersFromUrl();
+if (urlHasFacetParams()) {
+    queueMicrotask(() => {
+        store("query-filter").actions.fetchResults();
+    });
+}

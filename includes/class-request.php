@@ -5,7 +5,7 @@ declare(strict_types=1);
 final class Query_Filter_Request {
 
 	/**
-	 * @param array<string, array{values: string[], logic: string}> $filters
+	 * @param array<string, array<string, mixed>> $filters Normalized configs (discrete, range, or date_range).
 	 */
 	public function __construct(
 		public readonly int $query_id,
@@ -22,8 +22,8 @@ final class Query_Filter_Request {
 	 * @param array<string, mixed> $data
 	 */
 	public static function from_array( array $data ): self {
-		$filters_raw = $data['filters'] ?? array();
-		$filters     = array();
+		$filters_raw = $data['filters'] ?? [];
+		$filters     = [];
 
 		if ( is_array( $filters_raw ) ) {
 			foreach ( $filters_raw as $name => $entry ) {
@@ -35,13 +35,15 @@ final class Query_Filter_Request {
 					continue;
 				}
 
-				$values = array();
-				$logic  = 'OR';
+				if ( ! is_array( $entry ) ) {
+					continue;
+				}
 
-				if ( is_array( $entry ) && array_key_exists( 'values', $entry ) ) {
-					$raw_values = $entry['values'];
-					if ( is_array( $raw_values ) ) {
-						foreach ( $raw_values as $v ) {
+				if ( array_key_exists( 'values', $entry ) ) {
+					$values = [];
+					$raw    = $entry['values'];
+					if ( is_array( $raw ) ) {
+						foreach ( $raw as $v ) {
 							if ( is_string( $v ) ) {
 								$values[] = sanitize_text_field( $v );
 							}
@@ -49,19 +51,64 @@ final class Query_Filter_Request {
 					}
 					$logic_in = strtoupper( (string) ( $entry['logic'] ?? 'OR' ) );
 					$logic    = $logic_in === 'AND' ? 'AND' : 'OR';
-				} elseif ( is_array( $entry ) && array_is_list( $entry ) ) {
+					if ( $values !== [] ) {
+						$filters[ $key ] = [
+							'kind'   => 'discrete',
+							'values' => $values,
+							'logic'  => $logic,
+						];
+					}
+					continue;
+				}
+
+				if ( array_is_list( $entry ) ) {
+					$values = [];
 					foreach ( $entry as $v ) {
 						if ( is_string( $v ) ) {
 							$values[] = sanitize_text_field( $v );
 						}
 					}
+					if ( $values !== [] ) {
+						$filters[ $key ] = [
+							'kind'   => 'discrete',
+							'values' => $values,
+							'logic'  => 'OR',
+						];
+					}
+					continue;
 				}
 
-				if ( $values !== array() ) {
-					$filters[ $key ] = array(
-						'values' => $values,
-						'logic'  => $logic,
-					);
+				if ( array_key_exists( 'min', $entry ) || array_key_exists( 'max', $entry ) ) {
+					$min = array_key_exists( 'min', $entry )
+						? sanitize_text_field( (string) $entry['min'] )
+						: '';
+					$max = array_key_exists( 'max', $entry )
+						? sanitize_text_field( (string) $entry['max'] )
+						: '';
+					if ( $min !== '' || $max !== '' ) {
+						$filters[ $key ] = [
+							'kind' => 'range',
+							'min'  => $min,
+							'max'  => $max,
+						];
+					}
+					continue;
+				}
+
+				if ( array_key_exists( 'after', $entry ) || array_key_exists( 'before', $entry ) ) {
+					$after  = array_key_exists( 'after', $entry )
+						? sanitize_text_field( (string) $entry['after'] )
+						: '';
+					$before = array_key_exists( 'before', $entry )
+						? sanitize_text_field( (string) $entry['before'] )
+						: '';
+					if ( $after !== '' || $before !== '' ) {
+						$filters[ $key ] = [
+							'kind'   => 'date_range',
+							'after'  => $after,
+							'before' => $before,
+						];
+					}
 				}
 			}
 		}
@@ -70,7 +117,7 @@ final class Query_Filter_Request {
 		$filters_relationship = $rel === 'OR' ? 'OR' : 'AND';
 
 		$order = strtoupper( (string) ( $data['order'] ?? 'DESC' ) );
-		if ( ! in_array( $order, array( 'ASC', 'DESC' ), true ) ) {
+		if ( ! in_array( $order, [ 'ASC', 'DESC' ], true ) ) {
 			$order = 'DESC';
 		}
 
