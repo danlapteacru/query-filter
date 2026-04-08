@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-final class Query_Filter_Request {
+final class QLIF_Request {
 
 	/**
 	 * @param array<string, array<string, mixed>> $filters Normalized discrete configs.
@@ -16,6 +16,9 @@ final class Query_Filter_Request {
 		public readonly string $orderby,
 		public readonly string $order,
 		public readonly string $search,
+		// phpcs:ignore WordPress.WP.CapitalPDangit.MisspelledInText -- REST JSON slug default.
+		public readonly string $search_source = 'wordpress',
+		public readonly string $searchwp_engine = 'default',
 	) {}
 
 	/**
@@ -88,6 +91,19 @@ final class Query_Filter_Request {
 			$order = 'DESC';
 		}
 
+		// phpcs:disable WordPress.WP.CapitalPDangit.MisspelledInText -- REST JSON slug `wordpress`.
+		$search_source_raw = strtolower( (string) ( $data['searchSource'] ?? 'wordpress' ) );
+		$search_source     = $search_source_raw === 'searchwp' ? 'searchwp' : 'wordpress';
+		// phpcs:enable WordPress.WP.CapitalPDangit.MisspelledInText
+
+		$searchwp_engine = sanitize_text_field( (string) ( $data['searchwpEngine'] ?? 'default' ) );
+		if ( $searchwp_engine === '' ) {
+			$searchwp_engine = 'default';
+		}
+		if ( ! preg_match( '/^[a-z0-9_-]+$/i', $searchwp_engine ) ) {
+			$searchwp_engine = 'default';
+		}
+
 		return new self(
 			query_id:             (int) ( $data['queryId'] ?? 0 ),
 			page_id:              (int) ( $data['pageId'] ?? 0 ),
@@ -97,6 +113,8 @@ final class Query_Filter_Request {
 			orderby:              sanitize_key( (string) ( $data['orderby'] ?? 'date' ) ),
 			order:                $order,
 			search:               sanitize_text_field( (string) ( $data['search'] ?? '' ) ),
+			search_source:        $search_source,
+			searchwp_engine:      $searchwp_engine,
 		);
 	}
 }

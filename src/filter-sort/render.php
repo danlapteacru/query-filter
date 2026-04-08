@@ -56,4 +56,4 @@ ob_start();
 	</select>
 </div>
 <?php
-echo Query_Filter_Render_Hooks::block_html( ob_get_clean(), $block_name, $attributes, null );
+echo QLIF_Render_Hooks::block_html( ob_get_clean(), $block_name, $attributes, null );

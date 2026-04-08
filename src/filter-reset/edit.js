@@ -7,9 +7,11 @@ export default function Edit({ attributes, setAttributes }) {
     return (
         <>
             <InspectorControls>
-                <PanelBody title={__("Reset Settings", "query-filter")}>
+                <PanelBody
+                    title={__("Reset Settings", "query-loop-index-filters")}
+                >
                     <TextControl
-                        label={__("Label", "query-filter")}
+                        label={__("Label", "query-loop-index-filters")}
                         value={label}
                         onChange={(v) => setAttributes({ label: v })}
                     />

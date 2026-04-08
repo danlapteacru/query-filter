@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Database index table lifecycle (create on activation; row ops in later tasks).
  */
-final class Query_Filter_Indexer {
+final class QLIF_Indexer {
 
 	/**
 	 * Table name without prefix.
@@ -59,18 +59,18 @@ final class Query_Filter_Indexer {
 	// Instance methods: filter registry and row operations
 	// -------------------------------------------------------------------------
 
-	/** @var Query_Filter_Filter[] */
+	/** @var QLIF_Filter[] */
 	private array $filters = array();
 
-	public function register_filter( Query_Filter_Filter $filter ): void {
+	public function register_filter( QLIF_Filter $filter ): void {
 		$this->filters[ $filter->get_name() ] = $filter;
 	}
 
-	public function get_filter( string $name ): ?Query_Filter_Filter {
+	public function get_filter( string $name ): ?QLIF_Filter {
 		return $this->filters[ $name ] ?? null;
 	}
 
-	/** @return Query_Filter_Filter[] */
+	/** @return QLIF_Filter[] */
 	public function get_filters(): array {
 		return $this->filters;
 	}

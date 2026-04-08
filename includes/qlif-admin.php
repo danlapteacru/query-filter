@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-final class Query_Filter_Admin {
+final class QLIF_Admin {
 
 	public static function register(): void {
 		add_management_page(
-			__( 'Query Filter', 'query-filter' ),
-			__( 'Query Filter', 'query-filter' ),
+			__( 'Query Loop Index Filters', 'query-loop-index-filters' ),
+			__( 'Query Loop Index Filters', 'query-loop-index-filters' ),
 			'manage_options',
-			'query-filter',
+			'query-loop-index-filters',
 			array( self::class, 'render_page' )
 		);
-		add_action( 'load-tools_page_query-filter', array( self::class, 'process_rebuild_batches_without_cron' ) );
+		add_action( 'load-tools_page_query-loop-index-filters', array( self::class, 'process_rebuild_batches_without_cron' ) );
 	}
 
 	/**
@@ -25,12 +25,12 @@ final class Query_Filter_Admin {
 			return;
 		}
 
-		if ( ! Query_Filter_Indexer::rebuild_is_in_progress() ) {
+		if ( ! QLIF_Indexer::rebuild_is_in_progress() ) {
 			return;
 		}
 
 		/**
-		 * Whether to advance the rebuild when loading Tools → Query Filter.
+		 * Whether to advance the rebuild when loading Tools → Query Loop Index Filters.
 		 *
 		 * @param bool $run Default true.
 		 */
@@ -38,8 +38,8 @@ final class Query_Filter_Admin {
 			return;
 		}
 
-		$indexer = Query_Filter_Plugin::instance()->get_indexer();
-		if ( ! $indexer instanceof Query_Filter_Indexer ) {
+		$indexer = QLIF_Plugin::instance()->get_indexer();
+		if ( ! $indexer instanceof QLIF_Indexer ) {
 			return;
 		}
 
@@ -54,7 +54,7 @@ final class Query_Filter_Admin {
 		}
 
 		/**
-		 * Safety cap on batches per request (each batch is {@see Query_Filter_Indexer::BATCH_SIZE} posts).
+		 * Safety cap on batches per request (each batch is {@see QLIF_Indexer::BATCH_SIZE} posts).
 		 *
 		 * @param int $max Default 500.
 		 */
@@ -67,7 +67,7 @@ final class Query_Filter_Admin {
 		$batch_n = 0;
 
 		while ( ( microtime( true ) - $start ) < $budget && $batch_n < $max_batches ) {
-			if ( ! Query_Filter_Indexer::rebuild_is_in_progress() ) {
+			if ( ! QLIF_Indexer::rebuild_is_in_progress() ) {
 				break;
 			}
 			$more = $indexer->run_single_rebuild_batch();
@@ -78,8 +78,8 @@ final class Query_Filter_Admin {
 		}
 
 		// Option may have been deleted by run_single_rebuild_batch(); PHPStan cannot see that.
-		if ( ! Query_Filter_Indexer::rebuild_is_in_progress() ) {
-			wp_clear_scheduled_hook( Query_Filter_Indexer::CRON_HOOK );
+		if ( ! QLIF_Indexer::rebuild_is_in_progress() ) {
+			wp_clear_scheduled_hook( QLIF_Indexer::CRON_HOOK );
 		}
 	}
 
@@ -92,56 +92,56 @@ final class Query_Filter_Admin {
 		if ( isset( $_POST['query_filter_action'] ) && check_admin_referer( 'query_filter_admin' ) ) {
 			$action = sanitize_key( $_POST['query_filter_action'] );
 			if ( $action === 'rebuild' ) {
-				Query_Filter_Indexer::schedule_full_rebuild();
-				echo '<div class="notice notice-success"><p>' . esc_html__( 'Full rebuild scheduled.', 'query-filter' ) . '</p></div>';
+				QLIF_Indexer::schedule_full_rebuild();
+				echo '<div class="notice notice-success"><p>' . esc_html__( 'Full rebuild scheduled.', 'query-loop-index-filters' ) . '</p></div>';
 			} elseif ( $action === 'clear' ) {
 				global $wpdb;
-				$wpdb->query( 'TRUNCATE TABLE ' . Query_Filter_Indexer::table_name() );
+				$wpdb->query( 'TRUNCATE TABLE ' . QLIF_Indexer::table_name() );
 				delete_option( 'query_filter_last_indexed' );
 				delete_option( 'query_filter_rebuild_offset' );
-				wp_clear_scheduled_hook( Query_Filter_Indexer::CRON_HOOK );
-				echo '<div class="notice notice-success"><p>' . esc_html__( 'Index cleared.', 'query-filter' ) . '</p></div>';
+				wp_clear_scheduled_hook( QLIF_Indexer::CRON_HOOK );
+				echo '<div class="notice notice-success"><p>' . esc_html__( 'Index cleared.', 'query-loop-index-filters' ) . '</p></div>';
 			}
 		}
 
 		global $wpdb;
-		$table               = Query_Filter_Indexer::table_name();
+		$table               = QLIF_Indexer::table_name();
 		$indexed_posts       = (int) $wpdb->get_var( "SELECT COUNT(DISTINCT post_id) FROM {$table}" );
 		$total_rows          = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
 		$last_indexed        = get_option( 'query_filter_last_indexed' );
-		$rebuild_in_progress = Query_Filter_Indexer::rebuild_is_in_progress();
+		$rebuild_in_progress = QLIF_Indexer::rebuild_is_in_progress();
 
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Query Filter', 'query-filter' ); ?></h1>
+			<h1><?php esc_html_e( 'Query Loop Index Filters', 'query-loop-index-filters' ); ?></h1>
 
-			<h2><?php esc_html_e( 'Index Status', 'query-filter' ); ?></h2>
+			<h2><?php esc_html_e( 'Index Status', 'query-loop-index-filters' ); ?></h2>
 			<table class="widefat striped" style="max-width: 500px;">
 				<tr>
-					<td><?php esc_html_e( 'Indexed Posts', 'query-filter' ); ?></td>
+					<td><?php esc_html_e( 'Indexed Posts', 'query-loop-index-filters' ); ?></td>
 					<td><strong><?php echo esc_html( (string) $indexed_posts ); ?></strong></td>
 				</tr>
 				<tr>
-					<td><?php esc_html_e( 'Total Index Rows', 'query-filter' ); ?></td>
+					<td><?php esc_html_e( 'Total Index Rows', 'query-loop-index-filters' ); ?></td>
 					<td><strong><?php echo esc_html( (string) $total_rows ); ?></strong></td>
 				</tr>
 				<tr>
-					<td><?php esc_html_e( 'Last Indexed', 'query-filter' ); ?></td>
+					<td><?php esc_html_e( 'Last Indexed', 'query-loop-index-filters' ); ?></td>
 					<td><strong>
 					<?php
 						echo $last_indexed
 							? esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $last_indexed ) )
-							: esc_html__( 'Never', 'query-filter' );
+							: esc_html__( 'Never', 'query-loop-index-filters' );
 					?>
 					</strong></td>
 				</tr>
 				<tr>
-					<td><?php esc_html_e( 'Status', 'query-filter' ); ?></td>
+					<td><?php esc_html_e( 'Status', 'query-loop-index-filters' ); ?></td>
 					<td><strong>
 					<?php
 						echo $rebuild_in_progress
-							? esc_html__( 'Rebuilding...', 'query-filter' )
-							: esc_html__( 'Up to date', 'query-filter' );
+							? esc_html__( 'Rebuilding...', 'query-loop-index-filters' )
+							: esc_html__( 'Up to date', 'query-loop-index-filters' );
 					?>
 					</strong></td>
 				</tr>
@@ -151,27 +151,27 @@ final class Query_Filter_Admin {
 					<?php
 					esc_html_e(
 						'Rebuilds normally continue via WP-Cron (triggered by site visits). On local environments without cron, batches also run when you open or refresh this screen — reload until the status shows Up to date, or use WP-CLI: wp query-filter index rebuild.',
-						'query-filter'
+						'query-loop-index-filters'
 					);
 					?>
 				</p>
 			<?php endif; ?>
 
-			<h2><?php esc_html_e( 'Actions', 'query-filter' ); ?></h2>
+			<h2><?php esc_html_e( 'Actions', 'query-loop-index-filters' ); ?></h2>
 			<form method="post">
 				<?php wp_nonce_field( 'query_filter_admin' ); ?>
 				<p>
 					<button type="submit" name="query_filter_action" value="rebuild" class="button button-primary">
-						<?php esc_html_e( 'Rebuild Full Index', 'query-filter' ); ?>
+						<?php esc_html_e( 'Rebuild Full Index', 'query-loop-index-filters' ); ?>
 					</button>
 					<button type="submit" name="query_filter_action" value="clear" class="button"
-							onclick="return confirm('<?php esc_attr_e( 'Clear the entire index?', 'query-filter' ); ?>')">
-						<?php esc_html_e( 'Clear Index', 'query-filter' ); ?>
+							onclick="return confirm('<?php esc_attr_e( 'Clear the entire index?', 'query-loop-index-filters' ); ?>')">
+						<?php esc_html_e( 'Clear Index', 'query-loop-index-filters' ); ?>
 					</button>
 				</p>
 			</form>
 
-			<h2><?php esc_html_e( 'WP-CLI Commands', 'query-filter' ); ?></h2>
+			<h2><?php esc_html_e( 'WP-CLI Commands', 'query-loop-index-filters' ); ?></h2>
 			<pre style="background: #23282d; color: #eee; padding: 15px; max-width: 500px;">
 wp query-filter index rebuild
 wp query-filter index post &lt;post_id&gt;

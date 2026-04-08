@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-final class Query_Filter_Filter_Pager {
+final class QLIF_Filter_Pager {
 	/**
 	 * @return array{total: int, pages: int, current_page: int}
 	 */

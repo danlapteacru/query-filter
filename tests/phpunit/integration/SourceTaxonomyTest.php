@@ -9,7 +9,7 @@ class SourceTaxonomyTest extends WP_UnitTestCase {
         $term = self::factory()->term->create_and_get(['taxonomy' => 'category', 'name' => 'Shoes']);
         wp_set_object_terms($post_id, [$term->term_id], 'category');
 
-        $source = new Query_Filter_Source_Taxonomy('category');
+        $source = new QLIF_Source_Taxonomy('category');
         $values = $source->get_values($post_id);
 
         $this->assertCount(1, $values);
@@ -24,7 +24,7 @@ class SourceTaxonomyTest extends WP_UnitTestCase {
         $post_id = self::factory()->post->create();
         wp_set_object_terms($post_id, [], 'category');
 
-        $source = new Query_Filter_Source_Taxonomy('category');
+        $source = new QLIF_Source_Taxonomy('category');
         $values = $source->get_values($post_id);
 
         $this->assertSame([], $values);
@@ -40,7 +40,7 @@ class SourceTaxonomyTest extends WP_UnitTestCase {
         $post_id = self::factory()->post->create();
         wp_set_object_terms($post_id, [$child->term_id], 'category');
 
-        $source = new Query_Filter_Source_Taxonomy('category');
+        $source = new QLIF_Source_Taxonomy('category');
         $values = $source->get_values($post_id);
 
         $this->assertCount(1, $values);

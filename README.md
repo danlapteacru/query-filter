@@ -1,6 +1,10 @@
-# Query Filter
+# Query Loop Index Filters
+
+**Index-backed filters for the core Query Loop.**
 
 WordPress plugin that adds **index-backed filtering** for **Query Loop** blocks. Filter state lives in the **Interactivity API** store; results update through a **REST** endpoint that returns fresh `core/query` HTML and filter metadata.
+
+**Scope (current release):** Discrete facets only (checkbox, radio, dropdown); no range or date facets (yet).
 
 **Requirements:** WordPress **6.7+**, PHP **8.1+**.
 
@@ -12,17 +16,23 @@ WordPress plugin that adds **index-backed filtering** for **Query Loop** blocks.
   - **Filter container** — wraps child filters, links to a Query Loop via `queryId`; **Combine filters** (AND/OR across filters).
   - **Filter: Checkboxes** — multi-select; taxonomy-backed options; **Match** any or all values within that filter.
   - **Filter: Radio** / **Filter: Dropdown** — single choice; same indexed values as checkboxes (taxonomy terms, etc.).
-  - **Filter: Search**, **Sort**, **Reset** — live inside the container.
+  - **Filter: Search**, **Sort**, **Reset** — live inside the container. Search can use **WordPress** default `s` matching or **SearchWP** (`\SWP_Query` with `post__in` scoped to facet results, similar to FacetWP + SearchWP).
   - **Filter: Pager** — intended inside the Query Loop (pagination).
-- **REST API:** `POST /wp-json/query-filter/v1/results` — JSON body parsed by `Query_Filter_Request` (filters, optional `filtersRelationship`, sort, search, page, etc.).
-- **Admin:** **Tools → Query Filter** — index stats, schedule full rebuild, clear index. If **Rebuilding…** never finishes (common on localhost when WP-Cron does not run), **refresh that page**; the plugin runs rebuild batches during the request. Filters: `query_filter/admin/run_rebuild_batches_on_tools_page`, `query_filter/admin/rebuild_time_budget_seconds` (default 20), `query_filter/admin/rebuild_max_batches_per_request` (default 500).
+- **REST API:** `POST /wp-json/query-filter/v1/results` — JSON body parsed by `QLIF_Request` (filters, optional `filtersRelationship`, sort, search, page, etc.).
+- **Admin:** **Tools → Query Loop Index Filters** — index stats, schedule full rebuild, clear index. If **Rebuilding…** never finishes (common on localhost when WP-Cron does not run), **refresh that page**; the plugin runs rebuild batches during the request. Filters: `query_filter/admin/run_rebuild_batches_on_tools_page`, `query_filter/admin/rebuild_time_budget_seconds` (default 20), `query_filter/admin/rebuild_max_batches_per_request` (default 500).
 - **WP-CLI:** `wp query-filter index` — `rebuild`, `post <id>`, `status` (when WP-CLI is available).
 
 Out of the box, the plugin registers a **checkbox filter for each public taxonomy** and indexes published posts.
 
+## Getting started
+
+1. Add or select a **Query Loop** on the page and note its **Query Loop ID** (block sidebar).
+2. Insert a **Filter Container** block and set **Query Loop ID** to match that loop.
+3. Inside the container, add **one** taxonomy-backed facet (e.g. **Filter: Checkboxes**) and align **Filter name** with the taxonomy slug (see block help / Tools screen if counts are empty).
+
 ## Installation
 
-1. Clone or copy this directory into `wp-content/plugins/query-filter` (or symlink).
+1. Clone or copy this directory into `wp-content/plugins/query-loop-index-filters` (WordPress.org-style folder name) or `wp-content/plugins/query-filter` for local development (or symlink).
 2. Install PHP dependencies:
    ```bash
    composer install --no-dev
@@ -36,7 +46,7 @@ Out of the box, the plugin registers a **checkbox filter for each public taxonom
    npm install
    npm run build
    ```
-4. Activate **Query Filter** in **Plugins**.
+4. Activate **Query Loop Index Filters** in **Plugins**.
 
 The `build/` directory is produced by the build step and is not required in git for production if you ship prebuilt assets.
 
@@ -90,21 +100,22 @@ Typical JSON fields:
 |-------|------|
 | `queryId`, `pageId` | Target Query Loop and page context |
 | `page`, `orderby`, `order`, `search` | Pagination and query refinement |
+| `searchSource`, `searchwpEngine` | Optional. `searchSource`: `wordpress` (default) or `searchwp` when [SearchWP](https://searchwp.com/) is active. `searchwpEngine`: engine name (default `default`). Usually set from **Filter: Search** block attributes, not hand-written. |
 | `filtersRelationship` | `AND` or `OR` across filters |
 | `filters` | Discrete only: `name: ["slug", …]` or `name: { values, logic }`. |
 
 ### Extra discrete filters (PHP)
 
-Taxonomy filters are registered automatically. Register additional **`Query_Filter_Filter_Checkboxes`** filters (e.g. post meta) on the indexer:
+Taxonomy filters are registered automatically. Register additional **`QLIF_Filter_Checkboxes`** filters (e.g. post meta) on the indexer:
 
 ```php
 add_action(
 	'query_filter/indexer/register_filters',
-	static function ( Query_Filter_Indexer $indexer ): void {
+	static function ( QLIF_Indexer $indexer ): void {
 		$indexer->register_filter(
-			new Query_Filter_Filter_Checkboxes(
+			new QLIF_Filter_Checkboxes(
 				'brand',
-				new Query_Filter_Source_Post_Meta( 'brand' )
+				new QLIF_Source_Post_Meta( 'brand' )
 			)
 		);
 	}
@@ -119,7 +130,7 @@ The plugin exposes **WordPress filters** so themes and companion plugins can cha
 
 ### Registering more blocks (extensions)
 
-Built-in blocks are registered from folders under `build/` listed in **`Query_Filter_Blocks::DEFAULT_BUILD_DIRECTORIES`** (`includes/class-blocks.php`). To add blocks from another plugin without editing core plugin code, use:
+Built-in blocks are registered from folders under `build/` listed in **`QLIF_Blocks::DEFAULT_BUILD_DIRECTORIES`** (`includes/qlif-blocks.php`). To add blocks from another plugin without editing core plugin code, use:
 
 ```php
 add_filter( 'query_filter/blocks/build_directories', function ( array $dirs ) {
@@ -179,18 +190,18 @@ Use block classes (e.g. `.wp-block-query-filter-filter-checkboxes`) and **theme.
 ## Project layout
 
 ```
-query-filter.php          # Plugin bootstrap
-includes/                 # PHP (classmap autoload)
-  class-plugin.php
-  class-indexer.php       # Table + indexing
-  class-query-engine.php  # Filter → post IDs
-  class-rest-controller.php
-  class-request.php       # REST JSON → request DTO
-  class-renderer.php      # Renders Query Loop for IDs
-  class-blocks.php          # Default build/ block dirs; filterable for extensions
-  class-render-hooks.php    # apply_filters helpers for block HTML + REST
-  filters/                # Filter types
-  sources/                # Data sources (taxonomy, meta, …)
+query-loop-index-filters.php  # Plugin bootstrap
+includes/                     # PHP (classmap autoload; `qlif-*.php` = QLIF_* classes)
+  qlif-plugin.php
+  qlif-indexer.php            # Table + indexing
+  qlif-query-engine.php         # Filter → post IDs
+  qlif-rest-controller.php
+  qlif-request.php             # REST JSON → request DTO
+  qlif-renderer.php           # Renders Query Loop for IDs
+  qlif-blocks.php             # Default build/ block dirs; filterable for extensions
+  qlif-render-hooks.php       # apply_filters helpers for block HTML + REST
+  filters/                    # qlif-filter-*.php
+  sources/                    # qlif-source-*.php
 src/                      # Block source (JS + render.php)
 build/                    # Compiled blocks (gitignored)
 tests/phpunit/unit/       # Default PHPUnit

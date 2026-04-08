@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 final class QueryEngineCombineTest extends TestCase {
 
 	public function test_combine_and_intersects(): void {
-		$result = Query_Filter_Query_Engine::combine_post_id_sets(
+		$result = QLIF_Query_Engine::combine_post_id_sets(
 			[[1, 2], [2, 3]],
 			'AND'
 		);
@@ -15,7 +15,7 @@ final class QueryEngineCombineTest extends TestCase {
 	}
 
 	public function test_combine_or_unions_unique(): void {
-		$result = Query_Filter_Query_Engine::combine_post_id_sets(
+		$result = QLIF_Query_Engine::combine_post_id_sets(
 			[[1, 2], [2, 3]],
 			'OR'
 		);
@@ -24,15 +24,15 @@ final class QueryEngineCombineTest extends TestCase {
 	}
 
 	public function test_combine_single_set_unchanged(): void {
-		$result = Query_Filter_Query_Engine::combine_post_id_sets([[7, 8]], 'AND');
+		$result = QLIF_Query_Engine::combine_post_id_sets([[7, 8]], 'AND');
 		$this->assertSame([7, 8], $result);
-		$this->assertSame([7, 8], Query_Filter_Query_Engine::combine_post_id_sets([[7, 8]], 'OR'));
+		$this->assertSame([7, 8], QLIF_Query_Engine::combine_post_id_sets([[7, 8]], 'OR'));
 	}
 
 	public function test_combine_empty_sets_returns_empty(): void {
 		$this->assertSame(
 			[],
-			Query_Filter_Query_Engine::combine_post_id_sets([], 'AND')
+			QLIF_Query_Engine::combine_post_id_sets([], 'AND')
 		);
 	}
 }

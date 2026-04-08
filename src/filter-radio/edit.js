@@ -26,18 +26,20 @@ export default function Edit({ attributes, setAttributes }) {
     return (
         <>
             <InspectorControls>
-                <PanelBody title={__("Filter Settings", "query-filter")}>
+                <PanelBody
+                    title={__("Filter Settings", "query-loop-index-filters")}
+                >
                     <TextControl
-                        label={__("Filter Name", "query-filter")}
+                        label={__("Filter Name", "query-loop-index-filters")}
                         help={__(
                             "Indexed key: for taxonomy, use the taxonomy slug (match Source key). Custom labels break options unless Source key is set.",
-                            "query-filter",
+                            "query-loop-index-filters",
                         )}
                         value={filterName}
                         onChange={(val) => setAttributes({ filterName: val })}
                     />
                     <SelectControl
-                        label={__("Data Source", "query-filter")}
+                        label={__("Data Source", "query-loop-index-filters")}
                         value={sourceType}
                         options={[
                             { label: "Taxonomy", value: "taxonomy" },
@@ -47,7 +49,7 @@ export default function Edit({ attributes, setAttributes }) {
                     />
                     {sourceType === "taxonomy" && (
                         <SelectControl
-                            label={__("Taxonomy", "query-filter")}
+                            label={__("Taxonomy", "query-loop-index-filters")}
                             value={sourceKey}
                             options={(taxonomies || []).map((t) => ({
                                 label: t.name,
@@ -63,7 +65,7 @@ export default function Edit({ attributes, setAttributes }) {
                     )}
                     {sourceType === "postmeta" && (
                         <TextControl
-                            label={__("Meta Key", "query-filter")}
+                            label={__("Meta Key", "query-loop-index-filters")}
                             value={sourceKey}
                             onChange={(val) =>
                                 setAttributes({
@@ -74,17 +76,20 @@ export default function Edit({ attributes, setAttributes }) {
                         />
                     )}
                     <TextControl
-                        label={__("Label", "query-filter")}
+                        label={__("Label", "query-loop-index-filters")}
                         value={label}
                         onChange={(val) => setAttributes({ label: val })}
                     />
                     <ToggleControl
-                        label={__("Show Label", "query-filter")}
+                        label={__("Show Label", "query-loop-index-filters")}
                         checked={showLabel}
                         onChange={(val) => setAttributes({ showLabel: val })}
                     />
                     <ToggleControl
-                        label={__("Show Result Counts", "query-filter")}
+                        label={__(
+                            "Show Result Counts",
+                            "query-loop-index-filters",
+                        )}
                         checked={showCounts}
                         onChange={(val) => setAttributes({ showCounts: val })}
                     />
@@ -94,8 +99,9 @@ export default function Edit({ attributes, setAttributes }) {
                 <fieldset>
                     {showLabel && label && <legend>{label}</legend>}
                     <p style={{ color: "#757575", fontStyle: "italic" }}>
-                        {__("Radio filter", "query-filter")}:{" "}
-                        {sourceKey || __("(not configured)", "query-filter")}
+                        {__("Radio filter", "query-loop-index-filters")}:{" "}
+                        {sourceKey ||
+                            __("(not configured)", "query-loop-index-filters")}
                     </p>
                 </fieldset>
             </div>

@@ -25,7 +25,7 @@
     "limit": { "type": "number", "default": 0 },
     "placeholder": { "type": "string", "default": "" }
   },
-  "textdomain": "query-filter",
+  "textdomain": "query-loop-index-filters",
   "editorScript": "file:./index.js",
   "viewScriptModule": "file:./view.js",
   "render": "file:./render.php"

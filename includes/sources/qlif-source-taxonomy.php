@@ -2,7 +2,7 @@
 // includes/sources/class-source-taxonomy.php
 declare(strict_types=1);
 
-final class Query_Filter_Source_Taxonomy extends Query_Filter_Source {
+final class QLIF_Source_Taxonomy extends QLIF_Source {
 
 	public function __construct(
 		private readonly string $taxonomy,

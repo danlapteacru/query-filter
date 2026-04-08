@@ -8,7 +8,7 @@ class SourcePostMetaTest extends WP_UnitTestCase {
         $post_id = self::factory()->post->create();
         update_post_meta($post_id, 'color', 'red');
 
-        $source = new Query_Filter_Source_Post_Meta('color');
+        $source = new QLIF_Source_Post_Meta('color');
         $values = $source->get_values($post_id);
 
         $this->assertCount(1, $values);
@@ -21,7 +21,7 @@ class SourcePostMetaTest extends WP_UnitTestCase {
         add_post_meta($post_id, 'size', 'small');
         add_post_meta($post_id, 'size', 'medium');
 
-        $source = new Query_Filter_Source_Post_Meta('size');
+        $source = new QLIF_Source_Post_Meta('size');
         $values = $source->get_values($post_id);
 
         $this->assertCount(2, $values);
@@ -33,7 +33,7 @@ class SourcePostMetaTest extends WP_UnitTestCase {
     public function test_get_values_returns_empty_when_no_meta(): void {
         $post_id = self::factory()->post->create();
 
-        $source = new Query_Filter_Source_Post_Meta('nonexistent');
+        $source = new QLIF_Source_Post_Meta('nonexistent');
         $values = $source->get_values($post_id);
 
         $this->assertSame([], $values);

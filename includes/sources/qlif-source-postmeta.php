@@ -2,7 +2,7 @@
 // includes/sources/class-source-postmeta.php
 declare(strict_types=1);
 
-final class Query_Filter_Source_Post_Meta extends Query_Filter_Source {
+final class QLIF_Source_Post_Meta extends QLIF_Source {
 
 	public function __construct(
 		private readonly string $meta_key,

@@ -33,18 +33,20 @@ export default function Edit({ attributes, setAttributes }) {
     return (
         <>
             <InspectorControls>
-                <PanelBody title={__("Filter Settings", "query-filter")}>
+                <PanelBody
+                    title={__("Filter Settings", "query-loop-index-filters")}
+                >
                     <TextControl
-                        label={__("Filter Name", "query-filter")}
+                        label={__("Filter Name", "query-loop-index-filters")}
                         help={__(
                             "Indexed key: for taxonomy, use the taxonomy slug (match Source key).",
-                            "query-filter",
+                            "query-loop-index-filters",
                         )}
                         value={filterName}
                         onChange={(val) => setAttributes({ filterName: val })}
                     />
                     <SelectControl
-                        label={__("Data Source", "query-filter")}
+                        label={__("Data Source", "query-loop-index-filters")}
                         value={sourceType}
                         options={[
                             { label: "Taxonomy", value: "taxonomy" },
@@ -54,7 +56,7 @@ export default function Edit({ attributes, setAttributes }) {
                     />
                     {sourceType === "taxonomy" && (
                         <SelectControl
-                            label={__("Taxonomy", "query-filter")}
+                            label={__("Taxonomy", "query-loop-index-filters")}
                             value={sourceKey}
                             options={(taxonomies || []).map((t) => ({
                                 label: t.name,
@@ -70,7 +72,7 @@ export default function Edit({ attributes, setAttributes }) {
                     )}
                     {sourceType === "postmeta" && (
                         <TextControl
-                            label={__("Meta Key", "query-filter")}
+                            label={__("Meta Key", "query-loop-index-filters")}
                             value={sourceKey}
                             onChange={(val) =>
                                 setAttributes({
@@ -81,22 +83,25 @@ export default function Edit({ attributes, setAttributes }) {
                         />
                     )}
                     <TextControl
-                        label={__("Label", "query-filter")}
+                        label={__("Label", "query-loop-index-filters")}
                         value={label}
                         onChange={(val) => setAttributes({ label: val })}
                     />
                     <TextControl
-                        label={__("Placeholder", "query-filter")}
+                        label={__("Placeholder", "query-loop-index-filters")}
                         value={placeholder}
                         onChange={(val) => setAttributes({ placeholder: val })}
                     />
                     <ToggleControl
-                        label={__("Show Label", "query-filter")}
+                        label={__("Show Label", "query-loop-index-filters")}
                         checked={showLabel}
                         onChange={(val) => setAttributes({ showLabel: val })}
                     />
                     <ToggleControl
-                        label={__("Show Result Counts", "query-filter")}
+                        label={__(
+                            "Show Result Counts",
+                            "query-loop-index-filters",
+                        )}
                         checked={showCounts}
                         onChange={(val) => setAttributes({ showCounts: val })}
                     />
@@ -110,10 +115,14 @@ export default function Edit({ attributes, setAttributes }) {
                 ) : null}
                 <select
                     disabled
-                    aria-label={label || __("Dropdown filter", "query-filter")}
+                    aria-label={
+                        label ||
+                        __("Dropdown filter", "query-loop-index-filters")
+                    }
                 >
                     <option>
-                        {placeholder || __("(Dropdown filter)", "query-filter")}
+                        {placeholder ||
+                            __("(Dropdown filter)", "query-loop-index-filters")}
                     </option>
                 </select>
             </div>

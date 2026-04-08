@@ -7,20 +7,20 @@ description: >-
   the user mentions query-filter, Query Loop filtering, or query-filter/v1.
 ---
 
-# Query Filter plugin
+# Query Loop Index Filters (QLIF)
 
 ## What this repo is
 
 - **WordPress plugin** (PHP 8.1+, WP 6.7+): custom DB index → post IDs → server-rendered Query Loop HTML.
 - **Blocks** under `src/` (built to `build/`): `filter-container` (parent), checkboxes, radio, dropdown, search, sort, pager, reset. Interactivity store id: **`query-filter`**.
-- **REST**: `POST /wp-json/query-filter/v1/results` — body parsed by `Query_Filter_Request::from_array()`.
+- **REST**: `POST /wp-json/query-filter/v1/results` — body parsed by `QLIF_Request::from_array()`.
 
 ## Layout
 
 | Area | Path |
 |------|------|
-| Bootstrap | `query-filter.php` |
-| Core PHP | `includes/*.php`, `includes/filters/`, `includes/sources/` |
+| Bootstrap | `query-loop-index-filters.php` |
+| Core PHP | `includes/qlif-*.php`, `includes/filters/`, `includes/sources/` |
 | Block source | `src/<block-name>/` (`block.json`, `index.js`, `edit.js`, `render.php`, optional `view.js`) |
 | Built assets | `build/` (gitignored; run build after changing `src/`) |
 | Unit PHPUnit | `tests/phpunit/unit/` (default `phpunit.xml.dist`) |
@@ -32,12 +32,12 @@ description: >-
 
 - `declare(strict_types=1);` on new files.
 - Prefer **`[]`** over `array()` for literals (match surrounding file).
-- Classes: `Query_Filter_*`, typically `final`, classmap autoload via `composer.json`.
-- **Request shape** (REST JSON): `queryId`, `pageId`, `page`, `orderby`, `order`, `search`, optional **`filtersRelationship`** (`AND`|`OR`), **`filters`**: legacy `name → string[]`, discrete `name → { values, logic }`. Action **`query_filter/indexer/register_filters`** registers extra **`Query_Filter_Filter_Checkboxes`** filters on the indexer.
+- Classes: **`QLIF_*`**, typically `final`, classmap autoload via `composer.json`.
+- **Request shape** (REST JSON): `queryId`, `pageId`, `page`, `orderby`, `order`, `search`, optional **`filtersRelationship`** (`AND`|`OR`), **`filters`**: legacy `name → string[]`, discrete `name → { values, logic }`. Action **`query_filter/indexer/register_filters`** registers extra **`QLIF_Filter_Checkboxes`** filters on the indexer.
 
 ## Query engine
 
-- `Query_Filter_Query_Engine::get_post_ids( $active_filters, $between_filters_logic = 'AND' )`.
+- `QLIF_Query_Engine::get_post_ids( $active_filters, $between_filters_logic = 'AND' )`.
 - Per-filter configs use **`kind`**: `discrete` (`values` + **`logic`**).
 - Between filters: **`AND`** intersects sets; **`OR`** unions (`combine_post_id_sets()`).
 

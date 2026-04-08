@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Built-in block registration: one list of build/ subdirectories, extendable via filter.
  */
-final class Query_Filter_Blocks {
+final class QLIF_Blocks {
 
 	/**
 	 * Subdirectories under `build/` that contain a `block.json` each.

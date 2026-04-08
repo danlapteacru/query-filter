@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
-<ruleset name="Query Filter">
-	<description>WordPress-derived standards for Query Filter plugin PHP.</description>
+<ruleset name="Query Loop Index Filters">
+	<description>WordPress-derived standards for Query Loop Index Filters (QLIF) PHP.</description>
 
 	<file>includes</file>
-	<file>query-filter.php</file>
+	<file>query-loop-index-filters.php</file>
 
 	<exclude-pattern>*/vendor/*</exclude-pattern>
 	<exclude-pattern>*/node_modules/*</exclude-pattern>
@@ -14,7 +14,7 @@
 
 	<rule ref="WordPress-Core"/>
 
-	<!-- Classmap uses class-filter-*.php for Query_Filter_Filter_*; keep filenames. -->
+	<!-- Classmap uses qlif-filter-*.php for QLIF_Filter_*; keep filenames. -->
 	<rule ref="WordPress.Files.FileName">
 		<severity>0</severity>
 	</rule>

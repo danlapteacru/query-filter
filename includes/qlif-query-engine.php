@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-final class Query_Filter_Query_Engine {
+final class QLIF_Query_Engine {
 
 	/**
 	 * Combine per-filter post ID sets (AND = intersect, OR = union).
@@ -36,12 +36,12 @@ final class Query_Filter_Query_Engine {
 	/**
 	 * Resolve matching post IDs from the index based on active filters.
 	 *
-	 * @param array<string, array<string, mixed>> $active_filters Normalized configs (see Query_Filter_Request).
+	 * @param array<string, array<string, mixed>> $active_filters Normalized configs (see QLIF_Request).
 	 * @return int[]
 	 */
 	public function get_post_ids( array $active_filters, string $between_filters_logic = 'AND' ): array {
 		global $wpdb;
-		$table = Query_Filter_Indexer::table_name();
+		$table = QLIF_Indexer::table_name();
 
 		if ( empty( $active_filters ) ) {
 			$ids = $wpdb->get_col( "SELECT DISTINCT post_id FROM {$table}" );

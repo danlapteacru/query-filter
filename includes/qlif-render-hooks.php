@@ -6,7 +6,7 @@ declare(strict_types=1);
  * WordPress hooks for block markup and REST responses.
  * Block names are taken from {@see WP_Block::$name} in templates — not duplicated here.
  */
-final class Query_Filter_Render_Hooks {
+final class QLIF_Render_Hooks {
 
 	/**
 	 * Filter final HTML for a block render template.
@@ -80,19 +80,19 @@ final class Query_Filter_Render_Hooks {
 	 * (e.g. category), not display labels — if filterName is a custom label, sourceKey is used.
 	 *
 	 * @param array<string, mixed> $attributes filterName, sourceType, sourceKey.
-	 * @return array{0: string, 1: Query_Filter_Filter_Checkboxes|null}
+	 * @return array{0: string, 1: QLIF_Filter_Checkboxes|null}
 	 */
-	public static function resolve_discrete_checkbox_filter( ?Query_Filter_Indexer $indexer, array $attributes ): array {
+	public static function resolve_discrete_checkbox_filter( ?QLIF_Indexer $indexer, array $attributes ): array {
 		$candidate   = sanitize_key( (string) ( $attributes['filterName'] ?? '' ) );
 		$source_type = (string) ( $attributes['sourceType'] ?? 'taxonomy' );
 		$source_key  = sanitize_key( (string) ( $attributes['sourceKey'] ?? '' ) );
 
-		$try = static function ( string $key ) use ( $indexer ): ?Query_Filter_Filter_Checkboxes {
+		$try = static function ( string $key ) use ( $indexer ): ?QLIF_Filter_Checkboxes {
 			if ( $indexer === null || $key === '' ) {
 				return null;
 			}
 			$f = $indexer->get_filter( $key );
-			return $f instanceof Query_Filter_Filter_Checkboxes ? $f : null;
+			return $f instanceof QLIF_Filter_Checkboxes ? $f : null;
 		};
 
 		$f = $try( $candidate );

@@ -17,7 +17,7 @@ class RendererResolveTest extends WP_UnitTestCase {
 				'post_content' => serialize_blocks( [ $block ] ),
 			]
 		);
-		$this->assertSame( 5, Query_Filter_Renderer::resolve_document_query_loop_id( $post_id, 0 ) );
+		$this->assertSame( 5, QLIF_Renderer::resolve_document_query_loop_id( $post_id, 0 ) );
 	}
 
 	public function test_resolve_document_query_loop_id_exact_match(): void {
@@ -40,11 +40,11 @@ class RendererResolveTest extends WP_UnitTestCase {
 				'post_content' => serialize_blocks( [ $wrap ] ),
 			]
 		);
-		$this->assertSame( 2, Query_Filter_Renderer::resolve_document_query_loop_id( $post_id, 2 ) );
+		$this->assertSame( 2, QLIF_Renderer::resolve_document_query_loop_id( $post_id, 2 ) );
 	}
 
 	public function test_resolve_returns_requested_when_no_block(): void {
 		$post_id = self::factory()->post->create( [ 'post_content' => '<p>plain</p>' ] );
-		$this->assertSame( 9, Query_Filter_Renderer::resolve_document_query_loop_id( $post_id, 9 ) );
+		$this->assertSame( 9, QLIF_Renderer::resolve_document_query_loop_id( $post_id, 9 ) );
 	}
 }

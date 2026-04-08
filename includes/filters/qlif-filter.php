@@ -5,11 +5,11 @@ declare(strict_types=1);
 /**
  * Abstract base class for all query filters.
  */
-abstract class Query_Filter_Filter {
+abstract class QLIF_Filter {
 
 	public function __construct(
 		protected readonly string $filter_name,
-		protected readonly Query_Filter_Source $source,
+		protected readonly QLIF_Source $source,
 	) {}
 
 	public function get_name(): string {

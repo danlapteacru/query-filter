@@ -11,7 +11,7 @@
   "usesContext": [ "queryId" ],
   "supports": { "html": false, "interactivity": true },
   "attributes": {},
-  "textdomain": "query-filter",
+  "textdomain": "query-loop-index-filters",
   "editorScript": "file:./index.js",
   "viewScriptModule": "file:./view.js",
   "render": "file:./render.php"

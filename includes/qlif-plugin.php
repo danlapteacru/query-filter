@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-final class Query_Filter_Plugin {
+final class QLIF_Plugin {
 
 	private static ?self $instance         = null;
-	private ?Query_Filter_Indexer $indexer = null;
+	private ?QLIF_Indexer $indexer = null;
 
 	public static function instance(): self {
 		if ( self::$instance === null ) {
@@ -14,11 +14,11 @@ final class Query_Filter_Plugin {
 		return self::$instance;
 	}
 
-	public function set_indexer( Query_Filter_Indexer $indexer ): void {
+	public function set_indexer( QLIF_Indexer $indexer ): void {
 		$this->indexer = $indexer;
 	}
 
-	public function get_indexer(): ?Query_Filter_Indexer {
+	public function get_indexer(): ?QLIF_Indexer {
 		return $this->indexer;
 	}
 
@@ -28,10 +28,10 @@ final class Query_Filter_Plugin {
 		}
 
 		register_activation_hook(
-			QUERY_FILTER_PLUGIN_FILE,
+			QLIF_PLUGIN_FILE,
 			static function (): void {
-				Query_Filter_Indexer::create_table();
-				Query_Filter_Indexer::schedule_full_rebuild();
+				QLIF_Indexer::create_table();
+				QLIF_Indexer::schedule_full_rebuild();
 			}
 		);
 
@@ -42,37 +42,37 @@ final class Query_Filter_Plugin {
 		add_action( 'edited_term', array( $this, 'on_edited_term' ), 10, 3 );
 		add_action( 'delete_term', array( $this, 'on_delete_term' ), 10, 4 );
 		add_action( 'query_filter_cron_rebuild', array( $this, 'on_cron_rebuild' ) );
-		add_action( 'admin_menu', array( Query_Filter_Admin::class, 'register' ) );
-		add_action( 'rest_api_init', array( Query_Filter_Rest_Controller::class, 'register' ) );
+		add_action( 'admin_menu', array( QLIF_Admin::class, 'register' ) );
+		add_action( 'rest_api_init', array( QLIF_Rest_Controller::class, 'register' ) );
 		add_filter( 'render_block_core/query', array( $this, 'tag_query_block' ), 10, 2 );
 
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			\WP_CLI::add_command( 'query-filter index', Query_Filter_CLI::class );
+			\WP_CLI::add_command( 'query-filter index', QLIF_CLI::class );
 		}
 	}
 
 	public function configure_indexer(): void {
-		$this->indexer = new Query_Filter_Indexer();
+		$this->indexer = new QLIF_Indexer();
 
 		// Register filters based on saved filter configs.
 		// For MVP: scan for registered taxonomies and register a checkbox filter for each public one.
 		$taxonomies = get_taxonomies( array( 'public' => true ), 'names' );
 		foreach ( $taxonomies as $taxonomy ) {
-			$source = new Query_Filter_Source_Taxonomy( $taxonomy );
-			$this->indexer->register_filter( new Query_Filter_Filter_Checkboxes( $taxonomy, $source ) );
+			$source = new QLIF_Source_Taxonomy( $taxonomy );
+			$this->indexer->register_filter( new QLIF_Filter_Checkboxes( $taxonomy, $source ) );
 		}
 
 		/**
 		 * Register extra discrete filters (e.g. post meta checkboxes) or replace defaults.
 		 *
-		 * @param Query_Filter_Indexer $indexer
+		 * @param QLIF_Indexer $indexer
 		 */
 		do_action( 'query_filter/indexer/register_filters', $this->indexer );
 	}
 
 	public function register_blocks(): void {
-		$build_dir = dirname( QUERY_FILTER_PLUGIN_FILE ) . '/build';
-		foreach ( Query_Filter_Blocks::get_build_directories() as $subdir ) {
+		$build_dir = dirname( QLIF_PLUGIN_FILE ) . '/build';
+		foreach ( QLIF_Blocks::get_build_directories() as $subdir ) {
 			$block_dir = $build_dir . '/' . $subdir;
 			if ( file_exists( $block_dir . '/block.json' ) ) {
 				register_block_type( $block_dir );

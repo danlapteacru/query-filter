@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-final class Query_Filter_Renderer {
+final class QLIF_Renderer {
 
 	/**
 	 * @param int[]                  $post_ids
@@ -24,7 +24,7 @@ final class Query_Filter_Renderer {
 		$per_page     = (int) get_option( 'posts_per_page', 10 );
 		$prepared     = $this->prepare_result_post_ids( $post_ids, $search_args, $sort_args );
 		$total        = count( $prepared );
-		$pager        = new Query_Filter_Filter_Pager();
+		$pager        = new QLIF_Filter_Pager();
 		$pager_result = $pager->compute( $total, $per_page, $page );
 		$pages        = $pager_result['pages'];
 		$current_page = $pager_result['current_page'];
@@ -63,9 +63,9 @@ final class Query_Filter_Renderer {
 		if ( $post_ids === array() ) {
 			return array();
 		}
-		$orderby = $sort_args['orderby'] ?? 'date';
-		$order   = $sort_args['order'] ?? 'DESC';
-		$args    = array(
+		$orderby     = $sort_args['orderby'] ?? 'date';
+		$order       = $sort_args['order'] ?? 'DESC';
+		$args        = array(
 			'post__in'            => $post_ids,
 			'post_status'         => 'publish',
 			'posts_per_page'      => -1,
@@ -75,8 +75,15 @@ final class Query_Filter_Renderer {
 			'orderby'             => $orderby,
 			'order'               => $order,
 		);
-		if ( ! empty( $search_args['s'] ) ) {
-			$args['s'] = $search_args['s'];
+		$search_term = trim( (string) ( $search_args['s'] ?? '' ) );
+		if ( $search_term !== '' ) {
+			// phpcs:disable WordPress.WP.CapitalPDangit.MisspelledInText -- slug from QLIF_Filter_Search.
+			$source = (string) ( $search_args['source'] ?? 'wordpress' );
+			// phpcs:enable WordPress.WP.CapitalPDangit.MisspelledInText
+			if ( $source === 'searchwp' && class_exists( 'SWP_Query', false ) ) {
+				return $this->prepare_result_post_ids_searchwp( $post_ids, $search_term, $search_args, $sort_args );
+			}
+			$args['s'] = $search_term;
 		}
 		$query = new \WP_Query( $args );
 		/** @var int[]|string[] $posts */
@@ -84,6 +91,102 @@ final class Query_Filter_Renderer {
 		$ids   = array_map( 'intval', $posts );
 
 		return array_values( array_unique( $ids ) );
+	}
+
+	/**
+	 * SearchWP: run {@see \SWP_Query} over facet candidate IDs (like FacetWP + SearchWP).
+	 *
+	 * @param int[]                   $post_ids
+	 * @param array<string, string>   $search_args
+	 * @param array<string, string>   $sort_args
+	 * @return int[]
+	 */
+	private function prepare_result_post_ids_searchwp( array $post_ids, string $search_term, array $search_args, array $sort_args ): array {
+		$engine = (string) ( $search_args['searchwp_engine'] ?? 'default' );
+		if ( $engine === '' ) {
+			$engine = 'default';
+		}
+		$orderby_in  = $sort_args['orderby'] ?? 'date';
+		$order       = $sort_args['order'] ?? 'DESC';
+		$swp_orderby = 'relevance';
+		if ( in_array( $orderby_in, [ 'date', 'post_date' ], true ) ) {
+			$swp_orderby = 'date';
+		} elseif ( $orderby_in === 'rand' ) {
+			$swp_orderby = 'rand';
+		}
+
+		$swp_args = array(
+			's'           => $search_term,
+			'engine'      => $engine,
+			'post__in'    => $post_ids,
+			'fields'      => 'ids',
+			'nopaging'    => true,
+			'post_status' => array( 'publish' ),
+			'orderby'     => $swp_orderby,
+			'order'       => $order,
+		);
+
+		$swp = new \SWP_Query( $swp_args );
+		/** @var int[]|string[]|mixed $posts */
+		$posts = $swp->posts;
+		if ( ! is_array( $posts ) ) {
+			return array();
+		}
+
+		return array_values( array_unique( array_map( 'intval', $posts ) ) );
+	}
+
+	/**
+	 * Read the first nested Filter: Search block attributes (source / SearchWP engine).
+	 *
+	 * @return array{searchSource: string, searchwpEngine: string}
+	 */
+	public static function parse_search_config_from_container( ?\WP_Block $block ): array {
+		// phpcs:disable WordPress.WP.CapitalPDangit.MisspelledInText -- block attribute default slug.
+		$defaults = array(
+			'searchSource'   => 'wordpress',
+			'searchwpEngine' => 'default',
+		);
+		// phpcs:enable WordPress.WP.CapitalPDangit.MisspelledInText
+		if ( ! $block instanceof \WP_Block ) {
+			return $defaults;
+		}
+		$found = self::find_first_inner_block_named( $block, 'query-filter/filter-search' );
+		if ( $found === null ) {
+			return $defaults;
+		}
+		$attrs = $found->attributes;
+		// phpcs:disable WordPress.WP.CapitalPDangit.MisspelledInText -- block attribute slug.
+		$src = isset( $attrs['searchSource'] ) && $attrs['searchSource'] === 'searchwp' ? 'searchwp' : 'wordpress';
+		// phpcs:enable WordPress.WP.CapitalPDangit.MisspelledInText
+		$eng = isset( $attrs['searchwpEngine'] ) && is_string( $attrs['searchwpEngine'] ) && $attrs['searchwpEngine'] !== ''
+			? sanitize_text_field( $attrs['searchwpEngine'] )
+			: 'default';
+		if ( $eng === '' ) {
+			$eng = 'default';
+		}
+		if ( ! preg_match( '/^[a-z0-9_-]+$/i', $eng ) ) {
+			$eng = 'default';
+		}
+
+		return array(
+			'searchSource'   => $src,
+			'searchwpEngine' => $eng,
+		);
+	}
+
+	private static function find_first_inner_block_named( \WP_Block $block, string $name ): ?\WP_Block {
+		foreach ( $block->inner_blocks as $inner ) {
+			if ( $inner->name === $name ) {
+				return $inner;
+			}
+			$nested = self::find_first_inner_block_named( $inner, $name );
+			if ( $nested !== null ) {
+				return $nested;
+			}
+		}
+
+		return null;
 	}
 
 	/**

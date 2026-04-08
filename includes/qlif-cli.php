@@ -6,7 +6,7 @@ if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
 	return;
 }
 
-final class Query_Filter_CLI {
+final class QLIF_CLI {
 
 	/**
 	 * Rebuild the full index.
@@ -19,14 +19,14 @@ final class Query_Filter_CLI {
 	 * @subcommand rebuild
 	 */
 	public function rebuild( array $args, array $assoc_args ): void {
-		$indexer = Query_Filter_Plugin::instance()->get_indexer();
+		$indexer = QLIF_Plugin::instance()->get_indexer();
 		if ( ! $indexer ) {
 			\WP_CLI::error( 'Indexer not configured.' );
 			return;
 		}
 
 		global $wpdb;
-		$wpdb->query( 'TRUNCATE TABLE ' . Query_Filter_Indexer::table_name() );
+		$wpdb->query( 'TRUNCATE TABLE ' . QLIF_Indexer::table_name() );
 
 		$post_ids = get_posts(
 			array(
@@ -70,7 +70,7 @@ final class Query_Filter_CLI {
 			return;
 		}
 
-		$indexer = Query_Filter_Plugin::instance()->get_indexer();
+		$indexer = QLIF_Plugin::instance()->get_indexer();
 		if ( ! $indexer ) {
 			\WP_CLI::error( 'Indexer not configured.' );
 			return;
@@ -92,7 +92,7 @@ final class Query_Filter_CLI {
 	 */
 	public function status( array $args, array $assoc_args ): void {
 		global $wpdb;
-		$table = Query_Filter_Indexer::table_name();
+		$table = QLIF_Indexer::table_name();
 
 		$indexed_posts = (int) $wpdb->get_var( "SELECT COUNT(DISTINCT post_id) FROM {$table}" );
 		$total_rows    = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
@@ -115,7 +115,7 @@ final class Query_Filter_CLI {
 	 */
 	public function clear( array $args, array $assoc_args ): void {
 		global $wpdb;
-		$wpdb->query( 'TRUNCATE TABLE ' . Query_Filter_Indexer::table_name() );
+		$wpdb->query( 'TRUNCATE TABLE ' . QLIF_Indexer::table_name() );
 		delete_option( 'query_filter_last_indexed' );
 		\WP_CLI::success( 'Index cleared.' );
 	}

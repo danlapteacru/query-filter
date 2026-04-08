@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-final class Query_Filter_Filter_Sort {
+final class QLIF_Filter_Sort {
 	/**
 	 * @return array{orderby: string, order: string}
 	 */

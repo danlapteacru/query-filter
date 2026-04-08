@@ -2,7 +2,7 @@
 // includes/sources/class-source-acf.php
 declare(strict_types=1);
 
-final class Query_Filter_Source_ACF extends Query_Filter_Source {
+final class QLIF_Source_ACF extends QLIF_Source {
 
 	public function __construct(
 		private readonly string $field_name,

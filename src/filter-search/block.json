@@ -13,9 +13,15 @@
   "attributes": {
     "label": { "type": "string", "default": "Search" },
     "showLabel": { "type": "boolean", "default": true },
-    "placeholder": { "type": "string", "default": "Search..." }
+    "placeholder": { "type": "string", "default": "Search..." },
+    "searchSource": {
+      "type": "string",
+      "default": "wordpress",
+      "enum": ["wordpress", "searchwp"]
+    },
+    "searchwpEngine": { "type": "string", "default": "default" }
   },
-  "textdomain": "query-filter",
+  "textdomain": "query-loop-index-filters",
   "editorScript": "file:./index.js",
   "viewScriptModule": "file:./view.js",
   "render": "file:./render.php"
