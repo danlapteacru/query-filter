@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Checkbox-style filter: indexes one row per term assigned to a post.
  */
-final class Query_Filter_Filter_Checkboxes extends Query_Filter_Filter {
+final class QLIF_Filter_Checkboxes extends QLIF_Filter {
 
 	public function index_post( int $post_id ): array {
 		$source_values = $this->source->get_values( $post_id );
@@ -28,7 +28,7 @@ final class Query_Filter_Filter_Checkboxes extends Query_Filter_Filter {
 
 	public function load_values( array $params ): array {
 		global $wpdb;
-		$table = Query_Filter_Indexer::table_name();
+		$table = QLIF_Indexer::table_name();
 
 		$where = 'WHERE filter_name = %s';
 		$bind  = array( $this->filter_name );

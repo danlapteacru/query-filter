@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 class IndexerHooksTest extends WP_UnitTestCase {
 
-	private Query_Filter_Indexer $indexer;
+	private QLIF_Indexer $indexer;
 
 	public function set_up(): void {
 		parent::set_up();
-		Query_Filter_Indexer::create_table();
+		QLIF_Indexer::create_table();
 
-		$this->indexer = new Query_Filter_Indexer();
-		$source = new Query_Filter_Source_Taxonomy('category');
-		$this->indexer->register_filter(new Query_Filter_Filter_Checkboxes('category', $source));
+		$this->indexer = new QLIF_Indexer();
+		$source = new QLIF_Source_Taxonomy('category');
+		$this->indexer->register_filter(new QLIF_Filter_Checkboxes('category', $source));
 	}
 
 	public function test_save_post_triggers_indexing(): void {
 		global $wpdb;
-		$table = Query_Filter_Indexer::table_name();
+		$table = QLIF_Indexer::table_name();
 
-		Query_Filter_Plugin::instance()->set_indexer($this->indexer);
+		QLIF_Plugin::instance()->set_indexer($this->indexer);
 
 		$term = self::factory()->term->create_and_get(['taxonomy' => 'category', 'name' => 'Hats']);
 		$post_id = self::factory()->post->create(['post_status' => 'publish']);
@@ -37,9 +37,9 @@ class IndexerHooksTest extends WP_UnitTestCase {
 
 	public function test_delete_post_removes_index_rows(): void {
 		global $wpdb;
-		$table = Query_Filter_Indexer::table_name();
+		$table = QLIF_Indexer::table_name();
 
-		Query_Filter_Plugin::instance()->set_indexer($this->indexer);
+		QLIF_Plugin::instance()->set_indexer($this->indexer);
 
 		$post_id = self::factory()->post->create(['post_status' => 'publish']);
 		$term = self::factory()->term->create_and_get(['taxonomy' => 'category', 'name' => 'Temp']);

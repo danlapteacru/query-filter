@@ -12,7 +12,7 @@ if (! defined('ABSPATH')) {
 $plugin_root = dirname(__DIR__, 2);
 
 require $plugin_root . '/vendor/autoload.php';
-require $plugin_root . '/query-filter.php';
+require $plugin_root . '/query-loop-index-filters.php';
 
 if (! function_exists('sanitize_text_field')) {
     function sanitize_text_field(string $str): string {

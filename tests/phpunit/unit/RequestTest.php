@@ -17,7 +17,7 @@ final class RequestTest extends TestCase {
 			'search'  => 'running',
 		];
 
-		$request = Query_Filter_Request::from_array( $input );
+		$request = QLIF_Request::from_array( $input );
 
 		$this->assertSame( 1, $request->query_id );
 		$this->assertSame( 42, $request->page_id );
@@ -39,7 +39,7 @@ final class RequestTest extends TestCase {
 	}
 
 	public function test_from_array_uses_defaults_for_missing_fields(): void {
-		$request = Query_Filter_Request::from_array( [ 'queryId' => 1, 'pageId' => 10 ] );
+		$request = QLIF_Request::from_array( [ 'queryId' => 1, 'pageId' => 10 ] );
 
 		$this->assertSame( [], $request->filters );
 		$this->assertSame( 'AND', $request->filters_relationship );
@@ -56,7 +56,7 @@ final class RequestTest extends TestCase {
 			'filters' => [ 'cat' => [ '<script>alert(1)</script>', 'shoes' ] ],
 		];
 
-		$request = Query_Filter_Request::from_array( $input );
+		$request = QLIF_Request::from_array( $input );
 
 		$this->assertSame(
 			[
@@ -72,12 +72,12 @@ final class RequestTest extends TestCase {
 
 	public function test_from_array_rejects_non_array_filters(): void {
 		$input  = [ 'queryId' => 1, 'pageId' => 10, 'filters' => 'bad' ];
-		$request = Query_Filter_Request::from_array( $input );
+		$request = QLIF_Request::from_array( $input );
 		$this->assertSame( [], $request->filters );
 	}
 
 	public function test_from_array_parses_structured_filters_and_relationship(): void {
-		$request = Query_Filter_Request::from_array(
+		$request = QLIF_Request::from_array(
 			[
 				'queryId'             => 1,
 				'pageId'              => 2,
@@ -105,8 +105,33 @@ final class RequestTest extends TestCase {
 		);
 	}
 
+	public function test_from_array_parses_searchwp_fields(): void {
+		$request = QLIF_Request::from_array(
+			[
+				'queryId'        => 1,
+				'pageId'         => 1,
+				'search'         => 'test',
+				'searchSource'   => 'searchwp',
+				'searchwpEngine' => 'products',
+			]
+		);
+		$this->assertSame( 'searchwp', $request->search_source );
+		$this->assertSame( 'products', $request->searchwp_engine );
+	}
+
+	public function test_from_array_rejects_invalid_searchwp_engine_slug(): void {
+		$request = QLIF_Request::from_array(
+			[
+				'queryId'        => 1,
+				'pageId'         => 1,
+				'searchwpEngine' => 'bad slug',
+			]
+		);
+		$this->assertSame( 'default', $request->searchwp_engine );
+	}
+
 	public function test_from_array_normalizes_lowercase_filters_relationship(): void {
-		$request = Query_Filter_Request::from_array(
+		$request = QLIF_Request::from_array(
 			[
 				'queryId'             => 1,
 				'pageId'              => 1,
@@ -118,7 +143,7 @@ final class RequestTest extends TestCase {
 	}
 
 	public function test_from_array_skips_associative_filter_without_values_key(): void {
-		$request = Query_Filter_Request::from_array(
+		$request = QLIF_Request::from_array(
 			[
 				'queryId' => 1,
 				'pageId'  => 1,

@@ -6,16 +6,16 @@ class CheckboxesLoadValuesTest extends WP_UnitTestCase {
 
 	public function set_up(): void {
 		parent::set_up();
-		Query_Filter_Indexer::create_table();
+		QLIF_Indexer::create_table();
 	}
 
 	public function test_load_values_returns_counts_for_matching_posts(): void {
 		$shoes = self::factory()->term->create_and_get(['taxonomy' => 'category', 'name' => 'Shoes']);
 		$hats  = self::factory()->term->create_and_get(['taxonomy' => 'category', 'name' => 'Hats']);
 
-		$indexer = new Query_Filter_Indexer();
-		$source = new Query_Filter_Source_Taxonomy('category');
-		$filter = new Query_Filter_Filter_Checkboxes('category', $source);
+		$indexer = new QLIF_Indexer();
+		$source = new QLIF_Source_Taxonomy('category');
+		$filter = new QLIF_Filter_Checkboxes('category', $source);
 		$indexer->register_filter($filter);
 
 		$p1 = self::factory()->post->create();
@@ -39,9 +39,9 @@ class CheckboxesLoadValuesTest extends WP_UnitTestCase {
 	public function test_load_values_counts_scoped_to_given_post_ids(): void {
 		$shoes = self::factory()->term->create_and_get(['taxonomy' => 'category', 'name' => 'Shoes']);
 
-		$indexer = new Query_Filter_Indexer();
-		$source = new Query_Filter_Source_Taxonomy('category');
-		$filter = new Query_Filter_Filter_Checkboxes('category', $source);
+		$indexer = new QLIF_Indexer();
+		$source = new QLIF_Source_Taxonomy('category');
+		$filter = new QLIF_Filter_Checkboxes('category', $source);
 		$indexer->register_filter($filter);
 
 		$p1 = self::factory()->post->create();

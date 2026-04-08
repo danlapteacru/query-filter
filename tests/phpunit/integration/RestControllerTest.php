@@ -6,12 +6,12 @@ class RestControllerTest extends WP_UnitTestCase {
 
 	public function set_up(): void {
 		parent::set_up();
-		Query_Filter_Indexer::create_table();
+		QLIF_Indexer::create_table();
 
-		$indexer = new Query_Filter_Indexer();
-		$source = new Query_Filter_Source_Taxonomy('category');
-		$indexer->register_filter(new Query_Filter_Filter_Checkboxes('category', $source));
-		Query_Filter_Plugin::instance()->set_indexer($indexer);
+		$indexer = new QLIF_Indexer();
+		$source = new QLIF_Source_Taxonomy('category');
+		$indexer->register_filter(new QLIF_Filter_Checkboxes('category', $source));
+		QLIF_Plugin::instance()->set_indexer($indexer);
 
 		do_action('rest_api_init');
 	}
@@ -20,7 +20,7 @@ class RestControllerTest extends WP_UnitTestCase {
 		$term = self::factory()->term->create_and_get(['taxonomy' => 'category', 'name' => 'Shoes']);
 		$p1 = self::factory()->post->create(['post_title' => 'Post One', 'post_status' => 'publish']);
 		wp_set_object_terms($p1, [$term->term_id], 'category');
-		Query_Filter_Plugin::instance()->get_indexer()->index_post($p1);
+		QLIF_Plugin::instance()->get_indexer()->index_post($p1);
 
 		$request = new WP_REST_Request('POST', '/query-filter/v1/results');
 		$request->set_body(wp_json_encode([
@@ -46,7 +46,7 @@ class RestControllerTest extends WP_UnitTestCase {
 		$shoes = self::factory()->term->create_and_get(['taxonomy' => 'category', 'name' => 'Shoes']);
 		$hats  = self::factory()->term->create_and_get(['taxonomy' => 'category', 'name' => 'Hats']);
 
-		$indexer = Query_Filter_Plugin::instance()->get_indexer();
+		$indexer = QLIF_Plugin::instance()->get_indexer();
 
 		$p1 = self::factory()->post->create(['post_status' => 'publish']);
 		$p2 = self::factory()->post->create(['post_status' => 'publish']);

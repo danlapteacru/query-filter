@@ -6,8 +6,8 @@ class EndToEndTest extends WP_UnitTestCase {
 
     public function set_up(): void {
         parent::set_up();
-        Query_Filter_Indexer::create_table();
-        Query_Filter_Plugin::instance()->configure_indexer();
+        QLIF_Indexer::create_table();
+        QLIF_Plugin::instance()->configure_indexer();
     }
 
     public function test_full_flow_index_and_query(): void {
@@ -19,7 +19,7 @@ class EndToEndTest extends WP_UnitTestCase {
         wp_set_object_terms($p1, [$shoes->term_id], 'category');
         wp_set_object_terms($p2, [$hats->term_id], 'category');
 
-        $indexer = Query_Filter_Plugin::instance()->get_indexer();
+        $indexer = QLIF_Plugin::instance()->get_indexer();
         $indexer->index_post($p1);
         $indexer->index_post($p2);
 

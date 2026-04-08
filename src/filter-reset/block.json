@@ -13,7 +13,7 @@
   "attributes": {
     "label": { "type": "string", "default": "Reset Filters" }
   },
-  "textdomain": "query-filter",
+  "textdomain": "query-loop-index-filters",
   "editorScript": "file:./index.js",
   "viewScriptModule": "file:./view.js",
   "render": "file:./render.php"

@@ -266,6 +266,8 @@ const { state } = store("query-filter", {
         filterStates: {},
         filtersRelationship: "AND",
         initialFiltersRelationship: "AND",
+        searchSource: "wordpress",
+        searchwpEngine: "default",
     },
     actions: {
         setFilter(filterName, values) {
@@ -346,6 +348,15 @@ const { state } = store("query-filter", {
                         orderby: state.orderby,
                         order: state.order,
                         search: state.search,
+                        searchSource:
+                            state.searchSource === "searchwp"
+                                ? "searchwp"
+                                : "wordpress",
+                        searchwpEngine:
+                            typeof state.searchwpEngine === "string" &&
+                            state.searchwpEngine !== ""
+                                ? state.searchwpEngine
+                                : "default",
                     }),
                 });
 

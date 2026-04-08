@@ -7,20 +7,21 @@ parameters:
 	level: 6
 	paths:
 		- includes
-		- query-filter.php
+		- query-loop-index-filters.php
 	excludePaths:
-		- includes/class-cli.php
+		- includes/qlif-cli.php
 	scanFiles:
 		- vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
+		- phpstan-stubs/swp-query.phpstub
 	ignoreErrors:
 		# Optional third-party integrations (guarded by class_exists / runtime checks).
 		-
 			message: '#^Function get_field not found\.$#'
-			path: includes/sources/class-source-acf.php
+			path: includes/sources/qlif-source-acf.php
 		-
 			message: '#^Function wc_(get_product|attribute_taxonomy_name) not found\.$#'
-			path: includes/sources/class-source-woocommerce.php
+			path: includes/sources/qlif-source-woocommerce.php
 		# Rebuild flag is cleared inside run_single_rebuild_batch(); PHPStan cannot model option mutations.
 		-
 			identifier: booleanNot.alwaysFalse
-			path: includes/class-admin.php
+			path: includes/qlif-admin.php

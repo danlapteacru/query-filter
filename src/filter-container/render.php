@@ -24,15 +24,19 @@ if ( $page_id <= 0 ) {
 }
 $per_page           = (int) get_option( 'posts_per_page', 10 );
 
-$effective_query_id = Query_Filter_Renderer::resolve_document_query_loop_id( $page_id, $query_id_requested );
+$effective_query_id = QLIF_Renderer::resolve_document_query_loop_id( $page_id, $query_id_requested );
+
+$search_config = QLIF_Renderer::parse_search_config_from_container(
+	isset( $block ) && $block instanceof WP_Block ? $block : null
+);
 
 $initial_total = 0;
 $initial_pages = 0;
-$indexer       = Query_Filter_Plugin::instance()->get_indexer();
-if ( $indexer instanceof Query_Filter_Indexer ) {
-	$engine          = new Query_Filter_Query_Engine();
+$indexer       = QLIF_Plugin::instance()->get_indexer();
+if ( $indexer instanceof QLIF_Indexer ) {
+	$engine          = new QLIF_Query_Engine();
 	$initial_total   = count( $engine->get_post_ids( [] ) );
-	$pager_calc      = new Query_Filter_Filter_Pager();
+	$pager_calc      = new QLIF_Filter_Pager();
 	$initial_pager   = $pager_calc->compute( $initial_total, $per_page, 1 );
 	$initial_pages   = $initial_pager['pages'];
 }
@@ -49,6 +53,8 @@ wp_interactivity_state(
 		'pages'                      => $initial_pages,
 		'filtersRelationship'        => $filters_relationship,
 		'initialFiltersRelationship' => $filters_relationship,
+		'searchSource'               => $search_config['searchSource'],
+		'searchwpEngine'             => $search_config['searchwpEngine'],
 	]
 );
 
@@ -63,4 +69,4 @@ printf(
 	wp_json_encode( $context ),
 	$content
 );
-echo Query_Filter_Render_Hooks::block_html( ob_get_clean(), $block_name, $attributes, $context );
+echo QLIF_Render_Hooks::block_html( ob_get_clean(), $block_name, $attributes, $context );

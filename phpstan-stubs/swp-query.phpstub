@@ -1,0 +1,18 @@
+<?php
+
+/**
+ * SearchWP (optional dependency) — stub for static analysis only.
+ *
+ * @link https://searchwp.com/documentation/classes/swp_query/
+ */
+class SWP_Query {
+
+	/** @var array<int, int|string> */
+	public $posts = array();
+
+	/**
+	 * @param array<string, mixed> $args
+	 */
+	public function __construct( array $args ) {
+	}
+}

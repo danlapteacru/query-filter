@@ -13,22 +13,22 @@ $show_label  = $attributes['showLabel'] ?? true;
 $show_counts = $attributes['showCounts'] ?? true;
 $placeholder = $attributes['placeholder'] ?? '';
 
-$indexer = Query_Filter_Plugin::instance()->get_indexer();
-[ $filter_name, $filter ] = Query_Filter_Render_Hooks::resolve_discrete_checkbox_filter( $indexer, $attributes );
+$indexer = QLIF_Plugin::instance()->get_indexer();
+[ $filter_name, $filter ] = QLIF_Render_Hooks::resolve_discrete_checkbox_filter( $indexer, $attributes );
 
 if ( $filter_name === '' ) {
-	echo Query_Filter_Render_Hooks::block_html( '', $block_name, $attributes, [] );
+	echo QLIF_Render_Hooks::block_html( '', $block_name, $attributes, [] );
 	return;
 }
 
 $options = [];
-if ( $filter instanceof Query_Filter_Filter_Checkboxes ) {
+if ( $filter instanceof QLIF_Filter_Checkboxes ) {
 	$options = $filter->load_values( [] );
 } elseif ( current_user_can( 'manage_options' ) ) {
 	echo '<p class="wp-block-query-filter__setup-notice" style="font-size:13px;color:#646970;margin:0 0 8px;">';
 	esc_html_e(
 		'No index filter matches this block. For taxonomy sources the indexed name is the taxonomy slug — match Filter name to Source key.',
-		'query-filter'
+		'query-loop-index-filters'
 	);
 	echo '</p>';
 }
@@ -39,7 +39,7 @@ $context = [
 	'selected'   => [],
 ];
 
-$context = Query_Filter_Render_Hooks::filter_checkboxes_interactivity_context( $context, $attributes, $block_name );
+$context = QLIF_Render_Hooks::filter_checkboxes_interactivity_context( $context, $attributes, $block_name );
 
 ob_start();
 ?>
@@ -53,7 +53,7 @@ ob_start();
 			<span class="wp-block-query-filter__label"><?php echo esc_html( $label ); ?></span>
 		<?php endif; ?>
 		<select data-wp-on--change="actions.changeDropdown" class="wp-block-query-filter-dropdown__select">
-			<option value=""><?php echo esc_html( $placeholder !== '' ? $placeholder : __( 'Any', 'query-filter' ) ); ?></option>
+			<option value=""><?php echo esc_html( $placeholder !== '' ? $placeholder : __( 'Any', 'query-loop-index-filters' ) ); ?></option>
 			<?php foreach ( $options as $option ) : ?>
 				<option value="<?php echo esc_attr( $option['value'] ); ?>">
 					<?php echo esc_html( $option['label'] ); ?>
@@ -66,4 +66,4 @@ ob_start();
 	</label>
 </div>
 <?php
-echo Query_Filter_Render_Hooks::block_html( ob_get_clean(), $block_name, $attributes, $context );
+echo QLIF_Render_Hooks::block_html( ob_get_clean(), $block_name, $attributes, $context );

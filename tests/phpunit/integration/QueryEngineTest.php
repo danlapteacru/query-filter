@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 class QueryEngineTest extends WP_UnitTestCase {
 
-	private Query_Filter_Indexer $indexer;
+	private QLIF_Indexer $indexer;
 
 	public function set_up(): void {
 		parent::set_up();
-		Query_Filter_Indexer::create_table();
+		QLIF_Indexer::create_table();
 
-		$this->indexer = new Query_Filter_Indexer();
-		$cat_source = new Query_Filter_Source_Taxonomy('category');
-		$this->indexer->register_filter(new Query_Filter_Filter_Checkboxes('category', $cat_source));
+		$this->indexer = new QLIF_Indexer();
+		$cat_source = new QLIF_Source_Taxonomy('category');
+		$this->indexer->register_filter(new QLIF_Filter_Checkboxes('category', $cat_source));
 	}
 
 	public function test_or_logic_returns_posts_matching_any_value(): void {
@@ -32,7 +32,7 @@ class QueryEngineTest extends WP_UnitTestCase {
 		wp_set_object_terms($p3, [$hats->term_id], 'category');
 		$this->indexer->index_post($p3);
 
-		$engine = new Query_Filter_Query_Engine();
+		$engine = new QLIF_Query_Engine();
 		$result = $engine->get_post_ids(
 			['category' => ['values' => [$shoes->slug, $boots->slug], 'logic' => 'OR']],
 		);
@@ -55,7 +55,7 @@ class QueryEngineTest extends WP_UnitTestCase {
 		wp_set_object_terms($p2, [$shoes->term_id], 'category');
 		$this->indexer->index_post($p2);
 
-		$engine = new Query_Filter_Query_Engine();
+		$engine = new QLIF_Query_Engine();
 		$result = $engine->get_post_ids(
 			['category' => ['values' => [$shoes->slug, $red->slug], 'logic' => 'AND']],
 		);
@@ -70,8 +70,8 @@ class QueryEngineTest extends WP_UnitTestCase {
 		$red   = self::factory()->term->create_and_get(['taxonomy' => 'color', 'name' => 'Red']);
 		$blue  = self::factory()->term->create_and_get(['taxonomy' => 'color', 'name' => 'Blue']);
 
-		$color_source = new Query_Filter_Source_Taxonomy('color');
-		$this->indexer->register_filter(new Query_Filter_Filter_Checkboxes('color', $color_source));
+		$color_source = new QLIF_Source_Taxonomy('color');
+		$this->indexer->register_filter(new QLIF_Filter_Checkboxes('color', $color_source));
 
 		$p1 = self::factory()->post->create();
 		wp_set_object_terms($p1, [$shoes->term_id], 'category');
@@ -83,7 +83,7 @@ class QueryEngineTest extends WP_UnitTestCase {
 		wp_set_object_terms($p2, [$blue->term_id], 'color');
 		$this->indexer->index_post($p2);
 
-		$engine = new Query_Filter_Query_Engine();
+		$engine = new QLIF_Query_Engine();
 		$result = $engine->get_post_ids([
 			'category' => ['values' => [$shoes->slug], 'logic' => 'OR'],
 			'color'    => ['values' => [$red->slug], 'logic' => 'OR'],
@@ -99,8 +99,8 @@ class QueryEngineTest extends WP_UnitTestCase {
 		$red   = self::factory()->term->create_and_get(['taxonomy' => 'color', 'name' => 'Red']);
 		$blue  = self::factory()->term->create_and_get(['taxonomy' => 'color', 'name' => 'Blue']);
 
-		$color_source = new Query_Filter_Source_Taxonomy('color');
-		$this->indexer->register_filter(new Query_Filter_Filter_Checkboxes('color', $color_source));
+		$color_source = new QLIF_Source_Taxonomy('color');
+		$this->indexer->register_filter(new QLIF_Filter_Checkboxes('color', $color_source));
 
 		$p1 = self::factory()->post->create();
 		wp_set_object_terms($p1, [$shoes->term_id], 'category');
@@ -112,7 +112,7 @@ class QueryEngineTest extends WP_UnitTestCase {
 		wp_set_object_terms($p2, [$blue->term_id], 'color');
 		$this->indexer->index_post($p2);
 
-		$engine = new Query_Filter_Query_Engine();
+		$engine = new QLIF_Query_Engine();
 		$result = $engine->get_post_ids([
 			'category' => ['values' => [$shoes->slug], 'logic' => 'OR'],
 			'color'    => ['values' => [$red->slug], 'logic' => 'OR'],
@@ -133,7 +133,7 @@ class QueryEngineTest extends WP_UnitTestCase {
 		$this->indexer->index_post($p1);
 		$this->indexer->index_post($p2);
 
-		$engine = new Query_Filter_Query_Engine();
+		$engine = new QLIF_Query_Engine();
 		$result = $engine->get_post_ids([]);
 
 		sort($result);

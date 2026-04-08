@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 $block_name = ( isset( $block ) && $block instanceof WP_Block ) ? $block->name : '';
 
-$label = $attributes['label'] ?? __( 'Reset Filters', 'query-filter' );
+$label = $attributes['label'] ?? __( 'Reset Filters', 'query-loop-index-filters' );
 
 ob_start();
 ?>
@@ -25,4 +25,4 @@ ob_start();
 	</button>
 </div>
 <?php
-echo Query_Filter_Render_Hooks::block_html( ob_get_clean(), $block_name, $attributes, null );
+echo QLIF_Render_Hooks::block_html( ob_get_clean(), $block_name, $attributes, null );

@@ -10,7 +10,7 @@
 1. **Extension points** — `apply_filters` at stable boundaries without forking plugin files.
 2. **Front markup** — Themes/plugins change HTML from `render.php` while preserving Interactivity attributes when doing string edits.
 3. **REST** — Response payload filterable for integrations.
-4. **No duplicated block names** — Render templates use **`$block->name`** (from `block.json`). Built-in blocks are listed once in **`Query_Filter_Blocks::DEFAULT_BUILD_DIRECTORIES`**; extensions append via **`query_filter/blocks/build_directories`**.
+4. **No duplicated block names** — Render templates use **`$block->name`** (from `block.json`). Built-in blocks are listed once in **`QLIF_Blocks::DEFAULT_BUILD_DIRECTORIES`**; extensions append via **`query_filter/blocks/build_directories`**.
 
 ---
 
@@ -28,8 +28,8 @@
 
 | Hook | Args | Notes |
 |------|------|--------|
-| `query_filter/indexer/register_filters` | `Query_Filter_Indexer $indexer` | Register extra `Query_Filter_Filter_Checkboxes` filters (e.g. post meta sources). |
-| `query_filter/admin/run_rebuild_batches_on_tools_page` | `bool $run` | Default `true`: while a cron rebuild is pending, run batches during **Tools → Query Filter** load (for hosts without WP-Cron). |
+| `query_filter/indexer/register_filters` | `QLIF_Indexer $indexer` | Register extra `QLIF_Filter_Checkboxes` filters (e.g. post meta sources). |
+| `query_filter/admin/run_rebuild_batches_on_tools_page` | `bool $run` | Default `true`: while a cron rebuild is pending, run batches during **Tools → Query Loop Index Filters** load (for hosts without WP-Cron). |
 | `query_filter/admin/rebuild_time_budget_seconds` | `float $seconds` | Default `20` — max wall time per admin request for those batches. |
 | `query_filter/admin/rebuild_max_batches_per_request` | `int $max` | Default `500` — safety cap on batches per request. |
 
@@ -50,8 +50,8 @@
 
 ## Implementation
 
-- `Query_Filter_Blocks` — default directories + `get_build_directories()`.
-- `Query_Filter_Plugin::register_blocks()` uses `Query_Filter_Blocks::get_build_directories()`.
-- `Query_Filter_Render_Hooks` — `block_html()`, `filter_interactivity_context()`, `filter_checkboxes_interactivity_context()` (legacy + generic).
+- `QLIF_Blocks` — default directories + `get_build_directories()`.
+- `QLIF_Plugin::register_blocks()` uses `QLIF_Blocks::get_build_directories()`.
+- `QLIF_Render_Hooks` — `block_html()`, `filter_interactivity_context()`, `filter_checkboxes_interactivity_context()` (legacy + generic).
 - Block `render.php` files use `$block->name` for hook arguments.
-- `Query_Filter_Plugin::configure_indexer()` fires **`query_filter/indexer/register_filters`** after taxonomy checkbox filters.
+- `QLIF_Plugin::configure_indexer()` fires **`query_filter/indexer/register_filters`** after taxonomy checkbox filters.

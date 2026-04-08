@@ -2,7 +2,7 @@
 // includes/sources/class-source.php
 declare(strict_types=1);
 
-abstract class Query_Filter_Source {
+abstract class QLIF_Source {
 
 	/**
 	 * Return indexable values for a post.

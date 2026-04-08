@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-final class Query_Filter_Rest_Controller {
+final class QLIF_Rest_Controller {
 
 	public const NAMESPACE = 'query-filter/v1';
 	public const ROUTE     = '/results';
@@ -25,7 +25,7 @@ final class Query_Filter_Rest_Controller {
 			return new \WP_REST_Response( array( 'error' => 'Invalid JSON' ), 400 );
 		}
 
-		$request = Query_Filter_Request::from_array( $body );
+		$request = QLIF_Request::from_array( $body );
 		$page_id = $request->page_id;
 		if ( $page_id <= 0 ) {
 			$referer = $wp_request->get_header( 'referer' );
@@ -36,7 +36,7 @@ final class Query_Filter_Rest_Controller {
 				}
 			}
 		}
-		$plugin  = Query_Filter_Plugin::instance();
+		$plugin  = QLIF_Plugin::instance();
 		$indexer = $plugin->get_indexer();
 
 		if ( ! $indexer ) {
@@ -54,7 +54,7 @@ final class Query_Filter_Rest_Controller {
 				continue;
 			}
 			$kind = strtolower( (string) ( $config['kind'] ?? '' ) );
-			if ( $kind === 'discrete' && $filter instanceof Query_Filter_Filter_Checkboxes ) {
+			if ( $kind === 'discrete' && $filter instanceof QLIF_Filter_Checkboxes ) {
 				$values = isset( $config['values'] ) && is_array( $config['values'] ) ? $config['values'] : [];
 				$logic  = strtoupper( (string) ( $config['logic'] ?? 'OR' ) );
 				if ( $logic !== 'AND' ) {
@@ -71,19 +71,19 @@ final class Query_Filter_Rest_Controller {
 		}
 
 		// Resolve post IDs.
-		$engine       = new Query_Filter_Query_Engine();
+		$engine       = new QLIF_Query_Engine();
 		$all_post_ids = $engine->get_post_ids( $active_filters, $request->filters_relationship );
 
 		// Apply search filter.
-		$search_filter = new Query_Filter_Filter_Search();
-		$search_args   = $search_filter->get_query_args( $request->search );
+		$search_filter = new QLIF_Filter_Search();
+		$search_args   = $search_filter->get_query_args( $request->search, $request->search_source, $request->searchwp_engine );
 
 		// Apply sort.
-		$sort_filter = new Query_Filter_Filter_Sort();
+		$sort_filter = new QLIF_Filter_Sort();
 		$sort_args   = $sort_filter->get_query_args( $request->orderby, $request->order );
 
 		// Render results.
-		$renderer      = new Query_Filter_Renderer();
+		$renderer      = new QLIF_Renderer();
 		$render_result = $renderer->render(
 			post_ids:    $all_post_ids,
 			page:        $request->page,
@@ -96,7 +96,7 @@ final class Query_Filter_Rest_Controller {
 		// Load filter values (counts scoped to matching posts).
 		$filter_states = [];
 		foreach ( $indexer->get_filters() as $name => $filter ) {
-			if ( $filter instanceof Query_Filter_Filter_Checkboxes ) {
+			if ( $filter instanceof QLIF_Filter_Checkboxes ) {
 				$filter_states[ $name ] = $filter->load_values(
 					[
 						'post_ids' => $all_post_ids,

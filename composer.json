@@ -1,6 +1,6 @@
 {
-	"name": "query-filter/plugin",
-	"description": "Query Filter WordPress plugin",
+	"name": "query-loop-index-filters/plugin",
+	"description": "Query Loop Index Filters — WordPress plugin (QLIF)",
 	"license": "GPL-2.0-or-later",
 	"require": {
 		"php": ">=8.1"

@@ -2,7 +2,7 @@
 // includes/sources/class-source-woocommerce.php
 declare(strict_types=1);
 
-final class Query_Filter_Source_WooCommerce extends Query_Filter_Source {
+final class QLIF_Source_WooCommerce extends QLIF_Source {
 
 	public function __construct(
 		private readonly string $attribute_name,

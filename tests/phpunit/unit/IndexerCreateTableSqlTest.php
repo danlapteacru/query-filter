@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 final class IndexerCreateTableSqlTest extends TestCase {
 
 	public function test_create_table_sql_contains_expected_columns_and_keys(): void {
-		$sql = Query_Filter_Indexer::get_create_table_sql(
+		$sql = QLIF_Indexer::get_create_table_sql(
 			'wp_query_filter_index',
 			'DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
 		);
