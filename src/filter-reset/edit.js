@@ -7,7 +7,9 @@ export default function Edit({ attributes, setAttributes }) {
     return (
         <>
             <InspectorControls>
-                <PanelBody title={__("Reset Settings", "query-loop-index-filters")}>
+                <PanelBody
+                    title={__("Reset Settings", "query-loop-index-filters")}
+                >
                     <TextControl
                         label={__("Label", "query-loop-index-filters")}
                         value={label}

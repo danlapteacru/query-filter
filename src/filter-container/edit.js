@@ -13,7 +13,9 @@ export default function Edit({ attributes, setAttributes }) {
     return (
         <>
             <InspectorControls>
-                <PanelBody title={__("Filter Settings", "query-loop-index-filters")}>
+                <PanelBody
+                    title={__("Filter Settings", "query-loop-index-filters")}
+                >
                     <TextControl
                         label={__("Query Loop ID", "query-loop-index-filters")}
                         help={__(
@@ -27,7 +29,10 @@ export default function Edit({ attributes, setAttributes }) {
                         }
                     />
                     <SelectControl
-                        label={__("Combine filters", "query-loop-index-filters")}
+                        label={__(
+                            "Combine filters",
+                            "query-loop-index-filters",
+                        )}
                         help={__(
                             "How multiple checkbox filters work together: match all (AND) or match any (OR).",
                             "query-loop-index-filters",

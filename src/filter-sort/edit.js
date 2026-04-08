@@ -7,7 +7,9 @@ export default function Edit({ attributes }) {
     return (
         <>
             <InspectorControls>
-                <PanelBody title={__("Sort Settings", "query-loop-index-filters")}>
+                <PanelBody
+                    title={__("Sort Settings", "query-loop-index-filters")}
+                >
                     <p>
                         {__(
                             "Sort options are configured via block attributes.",

@@ -33,7 +33,9 @@ export default function Edit({ attributes, setAttributes }) {
     return (
         <>
             <InspectorControls>
-                <PanelBody title={__("Filter Settings", "query-loop-index-filters")}>
+                <PanelBody
+                    title={__("Filter Settings", "query-loop-index-filters")}
+                >
                     <TextControl
                         label={__("Filter Name", "query-loop-index-filters")}
                         help={__(
@@ -96,7 +98,10 @@ export default function Edit({ attributes, setAttributes }) {
                         onChange={(val) => setAttributes({ showLabel: val })}
                     />
                     <ToggleControl
-                        label={__("Show Result Counts", "query-loop-index-filters")}
+                        label={__(
+                            "Show Result Counts",
+                            "query-loop-index-filters",
+                        )}
                         checked={showCounts}
                         onChange={(val) => setAttributes({ showCounts: val })}
                     />
@@ -110,10 +115,14 @@ export default function Edit({ attributes, setAttributes }) {
                 ) : null}
                 <select
                     disabled
-                    aria-label={label || __("Dropdown filter", "query-loop-index-filters")}
+                    aria-label={
+                        label ||
+                        __("Dropdown filter", "query-loop-index-filters")
+                    }
                 >
                     <option>
-                        {placeholder || __("(Dropdown filter)", "query-loop-index-filters")}
+                        {placeholder ||
+                            __("(Dropdown filter)", "query-loop-index-filters")}
                     </option>
                 </select>
             </div>

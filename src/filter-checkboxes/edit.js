@@ -34,7 +34,9 @@ export default function Edit({ attributes, setAttributes }) {
     return (
         <>
             <InspectorControls>
-                <PanelBody title={__("Filter Settings", "query-loop-index-filters")}>
+                <PanelBody
+                    title={__("Filter Settings", "query-loop-index-filters")}
+                >
                     <TextControl
                         label={__("Filter Name", "query-loop-index-filters")}
                         help={__(
@@ -82,7 +84,10 @@ export default function Edit({ attributes, setAttributes }) {
                         />
                     )}
                     <SelectControl
-                        label={__("Selection Logic", "query-loop-index-filters")}
+                        label={__(
+                            "Selection Logic",
+                            "query-loop-index-filters",
+                        )}
                         value={logic}
                         options={[
                             { label: "OR (match any)", value: "OR" },
@@ -101,7 +106,10 @@ export default function Edit({ attributes, setAttributes }) {
                         onChange={(val) => setAttributes({ showLabel: val })}
                     />
                     <ToggleControl
-                        label={__("Show Result Counts", "query-loop-index-filters")}
+                        label={__(
+                            "Show Result Counts",
+                            "query-loop-index-filters",
+                        )}
                         checked={showCounts}
                         onChange={(val) => setAttributes({ showCounts: val })}
                     />
@@ -112,7 +120,8 @@ export default function Edit({ attributes, setAttributes }) {
                     {showLabel && label && <legend>{label}</legend>}
                     <p style={{ color: "#757575", fontStyle: "italic" }}>
                         {__("Checkboxes filter", "query-loop-index-filters")}:{" "}
-                        {sourceKey || __("(not configured)", "query-loop-index-filters")}
+                        {sourceKey ||
+                            __("(not configured)", "query-loop-index-filters")}
                     </p>
                 </fieldset>
             </div>

@@ -13,7 +13,9 @@ export default function Edit({ attributes, setAttributes }) {
     return (
         <>
             <InspectorControls>
-                <PanelBody title={__("Search Settings", "query-loop-index-filters")}>
+                <PanelBody
+                    title={__("Search Settings", "query-loop-index-filters")}
+                >
                     <TextControl
                         label={__("Label", "query-loop-index-filters")}
                         value={label}
@@ -49,7 +51,10 @@ export default function Edit({ attributes, setAttributes }) {
                                 value: "wordpress",
                             },
                             {
-                                label: __("SearchWP", "query-loop-index-filters"),
+                                label: __(
+                                    "SearchWP",
+                                    "query-loop-index-filters",
+                                ),
                                 value: "searchwp",
                             },
                         ]}
@@ -62,7 +67,10 @@ export default function Edit({ attributes, setAttributes }) {
                     />
                     {searchSource === "searchwp" && (
                         <TextControl
-                            label={__("SearchWP engine", "query-loop-index-filters")}
+                            label={__(
+                                "SearchWP engine",
+                                "query-loop-index-filters",
+                            )}
                             help={__(
                                 "Engine name from SearchWP settings (usually default).",
                                 "query-loop-index-filters",
